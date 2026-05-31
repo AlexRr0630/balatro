@@ -261,7 +261,7 @@ body.force-landscape .st-b{font-size:12px;padding:6px 16px;}
 
 <div id="game-wrap">
   <div id="game-main">
-    <div id="top-bar"><div class="blind-name" id="bn">ANTE 1 · 小盲注</div><div class="blind-info" id="bi">至少 300 分</div></div>
+    <div id="top-bar"><div class="blind-name" id="bn">ANTE 1 · 小盲注</div><div class="blind-info" id="bi">至少 300 分</div><span id="save-ind" style="font-size:var(--u3);color:var(--gold);opacity:0;transition:opacity 0.3s;font-family:monospace"></span><button id="mute-btn" style="font-size:var(--u3);background:none;border:1px solid rgba(155,89,182,0.2);color:var(--text2);border-radius:4px;padding:2px 8px;cursor:pointer;font-family:monospace">🔊</button><button id="restart-btn" style="font-size:var(--u3);background:none;border:1px solid rgba(155,89,182,0.2);color:var(--text2);border-radius:4px;padding:2px 8px;cursor:pointer;font-family:monospace">🔄</button></div>
     <div id="joker-col"></div>
     <div id="play-area">
       <div id="score-box">
@@ -540,7 +540,7 @@ function saveGame(){
     hd:G.hd.map(function(c){return {rank:c.rank,suit:c.suit,enh:c.enh||null,seal:c.seal||null};}),
     lastUsedConsumable:G.lastUsedConsumable?G.lastUsedConsumable.id:null,
   };
-  try{localStorage.setItem('balatro_save',JSON.stringify(data));}catch(e){}
+  try{localStorage.setItem('balatro_save',JSON.stringify(data));var sv=document.getElementById('save-ind');if(sv){sv.textContent='💾 已存档';sv.style.opacity='1';setTimeout(function(){sv.style.opacity='0';},1500);}}catch(e){}
 }
 function loadGame(){
   try{var raw=localStorage.getItem('balatro_save');if(!raw)return false;
@@ -954,7 +954,10 @@ function rr(){
     var d=document.createElement('div');
     var cls='card '+ (SR[c.suit]?'red':'black')+(G.sel.includes(i)?' sel':'');
     if(c.enh)cls+=' enh-'+c.enh;
+    // 花色底色
+    var suitBg={'♠':'rgba(80,40,120,0.08)','♥':'rgba(180,50,50,0.08)','♦':'rgba(200,140,40,0.08)','♣':'rgba(50,120,70,0.08)'};
     d.className=cls;
+    d.style.background=(suitBg[c.suit]||'')+',linear-gradient(180deg,rgba(241,196,15,0.03),transparent 40%),var(--card-front)';
     var enhTag=c.enh&&enhLabel[c.enh]?'<span style="position:absolute;top:2px;left:2px;font-size:var(--u3);opacity:0.7">'+enhLabel[c.enh]+'</span>':'';
     var sealIcon=c.seal?{red:'🔴',purple:'🟣',gold:'🟡',blue:'🔵'}[c.seal]:'';
     var sealTag=sealIcon?'<span style="position:absolute;bottom:2px;right:2px;font-size:var(--u3)">'+sealIcon+'</span>':'';
@@ -1146,7 +1149,7 @@ function ph(){
       if(res.steps[li].type==='xmult')document.getElementById('soMu').classList.add('pop');
       document.getElementById('soTo').textContent=res.steps[li].total;
       SND.joker();
-      li++;setTimeout(nxt,200);
+      li++;setTimeout(nxt,300);
     }
     nxt();
   }
@@ -1266,9 +1269,26 @@ function rsh(){
   }
   h+='<div class="shop-btns"><button class="sb sb-r" id="brr"'+(G.rr<=0||G.money<G.rc?' disabled':'')+'>🔄 $'+G.rc+' ('+G.rr+'次)</button><button class="sb sb-c" id="bnc">▶ 继续</button></div>';
   ov.innerHTML=h;
-  var cards=ov.querySelectorAll('.shop-it');for(var i=0;i<cards.length;i++)cards[i].addEventListener('click',function(idx){return function(){bi(idx);};}(parseInt(cards[i].dataset.i)));
+  var cards=ov.querySelectorAll('.shop-it');for(var i=0;i<cards.length;i++)cards[i].addEventListener('click',function(idx){return function(){showShopDetail(idx);};}(parseInt(cards[i].dataset.i)));
   document.getElementById('brr').addEventListener('click',rsh2);
   document.getElementById('bnc').addEventListener('click',csh);
+}
+
+function showShopDetail(idx){
+  var it=G.shop[idx];if(it.sold||G.money<it.price)return;
+  var ov2=document.createElement('div');ov2.className='ov';ov2.id='shopDetailOv';
+  var h='<div style="text-align:center;max-width:300px">';
+  h+='<div style="font-size:var(--u6);margin-bottom:var(--u2)">'+it.em+'</div>';
+  h+='<div style="font-size:var(--u5);color:var(--gold);font-weight:bold;margin-bottom:var(--u2)">'+it.n+'</div>';
+  h+='<div style="font-size:var(--u3);color:var(--text2);margin-bottom:var(--u3);line-height:1.5">'+it.d+'</div>';
+  h+='<div style="font-size:var(--u4);color:var(--gold);margin-bottom:var(--u4)">$'+it.price+'</div>';
+  h+='<div style="display:flex;gap:var(--u2);justify-content:center">';
+  h+='<button class="sb sb-c" id="shopBuy">购买</button>';
+  h+='<button class="sb sb-r" id="shopCancel">返回</button>';
+  h+='</div></div>';
+  ov2.innerHTML=h;document.body.appendChild(ov2);
+  document.getElementById('shopBuy').addEventListener('click',function(){ov2.remove();bi(idx);});
+  document.getElementById('shopCancel').addEventListener('click',function(){ov2.remove();});
 }
 
 function gs(){
@@ -1675,6 +1695,12 @@ document.getElementById('bd').addEventListener('click',dc);
 document.getElementById('sortSuit').addEventListener('click',sortBySuit);
 document.getElementById('sortRank').addEventListener('click',sortByRank);
 document.getElementById('landscape-toggle').addEventListener('click',toggleLandscape);
+
+// ===== 音量开关 =====
+var SND_MUTED=false;
+SND.play=function(t,f,d,v,w){if(SND_MUTED)return;this.init();this.resume();var _=this.ctx;var o=_.createOscillator();var g=_.createGain();o.type=t||'sine';o.frequency.value=f||440;g.gain.setValueAtTime(v||0.15,_.currentTime);g.gain.exponentialRampToValueAtTime(0.001,_.currentTime+(d||0.15));if(w){var o2=_.createOscillator();o2.type='square';o2.frequency.value=f*1.5;o2.connect(g);o2.start();o2.stop(_.currentTime+d||0.15);}o.connect(g);g.connect(_.destination);o.start();o.stop(_.currentTime+d||0.15);};
+document.getElementById('mute-btn').addEventListener('click',function(){SND_MUTED=!SND_MUTED;this.textContent=SND_MUTED?'🔇':'🔊';if(!SND_MUTED)SND.init();});
+document.getElementById('restart-btn').addEventListener('click',function(){if(confirm('确定要重新开始吗？当前进度会丢失。')){localStorage.removeItem('balatro_save');rg();}});
 
 // ===== 控制台系统 =====
 var cheatMode=false;
