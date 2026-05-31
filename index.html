@@ -48,20 +48,33 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 
 #play-area{padding:var(--u3);gap:var(--u3);display:flex;flex-direction:column;flex:1;}
 #score-box{padding:var(--u3) var(--u2);background:rgba(26,16,40,0.5);border:1px solid rgba(155,89,182,0.1);border-radius:8px;text-align:center;}
-.sc-target{font-size:var(--u);color:var(--text2);font-family:monospace;margin-bottom:var(--u3);}
-.sc-target b{color:var(--gold);font-size:var(--u4);}
+.sc-target{font-size:var(--u);color:rgba(160,136,192,0.5);font-family:monospace;margin-bottom:var(--u3);}
+.sc-target b{color:var(--gold);font-size:var(--u4);text-shadow:0 0 8px rgba(241,196,15,0.3);}
 .sc-nums{display:flex;justify-content:center;align-items:center;gap:var(--u3);font-family:monospace;}
-.sc-chip{font-size:var(--u6);font-weight:bold;color:var(--chip);text-shadow:0 1px 4px rgba(39,174,96,0.2);transition:all 0.3s;}
-.sc-mult{font-size:var(--u6);font-weight:bold;color:var(--mult);text-shadow:0 1px 4px rgba(192,57,43,0.2);transition:all 0.3s;}
-.sc-x{font-size:var(--u4);color:var(--text2);}.sc-eq{font-size:var(--u4);color:var(--text2);}
+.sc-chip{font-size:var(--u6);font-weight:bold;color:var(--chip);text-shadow:0 0 10px rgba(39,174,96,0.3);transition:all 0.3s;}
+.sc-mult{font-size:var(--u6);font-weight:bold;color:var(--mult);text-shadow:0 0 10px rgba(231,76,60,0.3);transition:all 0.3s;}
+.sc-x{font-size:var(--u4);color:rgba(160,136,192,0.35);}.sc-eq{font-size:var(--u4);color:rgba(160,136,192,0.35);}
 .sc-tot{font-size:var(--u6);font-weight:bold;color:var(--gold);text-shadow:0 0 8px rgba(241,196,15,0.3);transition:all 0.3s;}
 .sc-bar{height:var(--u4);background:rgba(0,0,0,0.08);border-radius:var(--u2);margin-top:var(--u2);position:relative;overflow:hidden;}
 .sc-bar-f{height:100%;border-radius:var(--u2);background:linear-gradient(90deg,var(--chip),var(--gold));transition:width 0.6s;}
 .sc-bar-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:var(--u2);color:var(--gold);font-weight:bold;font-family:monospace;text-shadow:0 0 4px rgba(241,196,15,0.4);}
-#hand-badge{text-align:center;font-size:var(--u);font-weight:bold;color:var(--gold);opacity:0;transition:opacity 0.3s;font-family:monospace;}
+#hand-badge{text-align:center;font-size:var(--u);font-weight:bold;opacity:0;transition:opacity 0.3s;font-family:monospace;padding:var(--u2) var(--u3);border-radius:4px;display:inline-block;}
 #hand-badge.show{opacity:1;}
+#hand-badge.ht-high{color:#888;background:rgba(80,80,80,0.15);}
+#hand-badge.ht-pair{color:#3498db;background:rgba(52,152,219,0.1);}
+#hand-badge.ht-twopair{color:#2ecc71;background:rgba(46,204,113,0.1);}
+#hand-badge.ht-three{color:#e67e22;background:rgba(230,126,34,0.1);}
+#hand-badge.ht-straight{color:#e74c3c;background:rgba(231,76,60,0.1);}
+#hand-badge.ht-flush{color:#f1c40f;background:rgba(241,196,15,0.1);}
+#hand-badge.ht-fullhouse{color:#9b59b6;background:rgba(155,89,182,0.1);}
+#hand-badge.ht-four{color:#e74c3c;background:rgba(231,76,60,0.15);text-shadow:0 0 8px rgba(231,76,60,0.3);}
+#hand-badge.ht-strflush{color:#f1c40f;background:rgba(241,196,15,0.15);text-shadow:0 0 8px rgba(241,196,15,0.4);}
+#hand-badge.ht-royal{color:#f1c40f;background:rgba(241,196,15,0.2);text-shadow:0 0 12px rgba(241,196,15,0.5);}
+#hand-badge.ht-five{color:#e74c3c;background:rgba(231,76,60,0.2);text-shadow:0 0 12px rgba(231,76,60,0.5);}
+#hand-badge.ht-flushhouse{color:#9b59b6;background:rgba(155,89,182,0.15);text-shadow:0 0 8px rgba(155,89,182,0.3);}
+#hand-badge.ht-flushfive{color:#f1c40f;background:rgba(241,196,15,0.2);text-shadow:0 0 12px rgba(241,196,15,0.5);}
 #res-row{display:flex;gap:var(--u);justify-content:center;font-size:var(--u);font-family:monospace;}
-.res-h{color:var(--blue);}.res-d{color:var(--mult);}.res-m{color:var(--gold);}
+.res-h{color:rgba(52,152,219,0.6);}.res-d{color:rgba(231,76,60,0.6);}.res-m{color:var(--gold);text-shadow:0 0 6px rgba(241,196,15,0.2);}
 
 #sort-row{display:flex;gap:var(--u3);justify-content:center;padding:var(--u3) 0;}
 .sort-btn{font-family:monospace;font-size:var(--u3);padding:2px var(--u3);border:1px solid rgba(155,89,182,0.2);border-radius:3px;cursor:pointer;background:rgba(26,16,40,0.4);color:var(--text2);transition:all 0.2s;}
@@ -86,9 +99,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .card .br .r{font-size:clamp(13px,1.5vw,18px);line-height:1;}
 .card .br .br-s{font-size:clamp(11px,1.3vw,16px);line-height:1;}
 .card.red{color:#e74c3c;text-shadow:0 0 6px rgba(231,76,60,0.3);}.card.black{color:var(--gold);text-shadow:0 0 4px rgba(241,196,15,0.2);}
-.card.sel{transform:translateY(-8px) scale(1.04);border-color:var(--gold);box-shadow:0 10px 24px rgba(241,196,15,0.35),0 0 18px rgba(241,196,15,0.2);z-index:10;}
-.card:hover:not(.sel){transform:translateY(calc(var(--u2)*-0.7));border-color:var(--gold);}
-@keyframes flyOut{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-60px) scale(0.3);opacity:0}}
+.card.sel{transform:translateY(-8px) scale(1.04);border-color:var(--gold);box-shadow:0 10px 24px rgba(241,196,15,0.35),0 0 18px rgba(241,196,15,0.2);z-index:10;background:linear-gradient(180deg,rgba(241,196,15,0.06),transparent 30%),var(--card-front);}
+.card:hover:not(.sel){transform:translateY(calc(var(--u2)*-0.7));border-color:rgba(241,196,15,0.5);}
+@keyframes flyOut{0%{transform:translateY(0) scale(1);opacity:1}30%{transform:translateY(-20px) rotate(10deg) scale(1.05);opacity:0.8}100%{transform:translateY(-80px) rotate(30deg) scale(0.3);opacity:0}}
 .card.fly{animation:flyOut 0.3s ease forwards;}
 .card.enh-lucky{border-color:#2ecc71;box-shadow:0 0 10px rgba(46,204,113,0.4);}
 .card.enh-mult{border-color:#e74c3c;box-shadow:0 0 10px rgba(231,76,60,0.3);}
@@ -662,6 +675,7 @@ function hm(t,l){
   return base+lvM*l;
 }
 
+function htCSS(ht){var m={'Royal Flush':'royal','Straight Flush':'strflush','Four of a Kind':'four','Full House':'fullhouse','Flush':'flush','Straight':'straight','Three of a Kind':'three','Two Pair':'twopair','Pair':'pair','High Card':'high','Five of a Kind':'five','Flush House':'flushhouse','Flush Five':'flushfive'};return m[ht]||'high';}
 function jfxSeq(cards,ht){
   var chips=hc(ht,G.hLv[ht])+cards.reduce(function(s,c){return s+(c.enh==='stone'?0:V[c.rank]);},0);
   var mult=hm(ht,G.hLv[ht]);
@@ -888,7 +902,12 @@ function rr(){
     document.getElementById('smu').textContent=res.mult%1===0?res.mult:res.mult.toFixed(1);
     document.getElementById('sto').textContent=res.total;
     var lv=G.hLv[ht],lt=lv>0?' Lv.'+(lv+1):'';
-    document.getElementById('hand-badge').textContent=HZ[ht]+lt;
+    var badge=document.getElementById('hand-badge');
+    badge.textContent=HZ[ht]+lt;
+    badge.classList.add('show');
+    // 牌型等级颜色
+    badge.className='show ht-'+htCSS(ht);
+    badge.textContent=HZ[ht]+lt;
     document.getElementById('hand-badge').classList.add('show');
     // 分数预览
     var pv=document.getElementById('preview-row');
@@ -1097,7 +1116,7 @@ function rrCons(){
   }
 }
 
-function ts(i){if(anim||G.ph!=='play')return;var idx=G.sel.indexOf(i);if(idx>=0){G.sel.splice(idx,1);SND.cardDesel();}else if(G.sel.length>=5)return;else{G.sel.push(i);SND.cardSel();}rr();}
+function ts(i){if(anim||G.ph!=='play')return;var idx=G.sel.indexOf(i);if(idx>=0){G.sel.splice(idx,1);SND.cardDesel();}else if(G.sel.length>=5)return;else{G.sel.push(i);SND.cardSel();}rr();var cardEls=document.querySelectorAll('#cards-row .card');if(cardEls[i]){cardEls[i].classList.remove('pop');void cardEls[i].offsetWidth;cardEls[i].classList.add('pop');}}
 
 function sortBySuit(){
   G.hd.sort((a,b)=>{var si=S.indexOf(a.suit)-S.indexOf(b.suit);return si!==0?si:V[a.rank]-V[b.rank];});
@@ -1234,12 +1253,18 @@ function dc(){
 
 function wr(){
   G.stats.roundsPlayed++;G.stats.highestScore=Math.max(G.stats.highestScore,G.sc);
+  // 过关庆祝动画
+  SND.win();
+  var celOv=document.createElement('div');celOv.className='ov';celOv.id='celOv';
+  celOv.innerHTML='<div class="win-burst" style="font-size:var(--u6);color:var(--gold);text-shadow:0 0 20px rgba(241,196,15,0.5);font-weight:bold;font-family:monospace;margin-bottom:var(--u3)">✅ 过关!</div><div style="font-size:var(--u4);color:var(--chip);font-family:monospace">分数 '+G.sc+' / '+G.tgt+'</div>';
+  document.body.appendChild(celOv);
+  // CRT闪屏
+  document.body.classList.add('crt-flash');setTimeout(function(){document.body.classList.remove('crt-flash');},200);
   var interestCap=5;G.vouchers.forEach(function(v){if(v==='v_interest'||v==='v_ante')interestCap+=1;if(v==='v_investment'&&G.tags.indexOf('tg_investment')>=0)interestCap+=25;});
   var i=Math.min(interestCap,Math.floor(G.money/5));
   var hustle=G.vouchers.indexOf('v_hustle')>=0?2:0;
   G.money+=3+G.a+i+hustle;G.stats.moneyEarned+=3+G.a+i+hustle;
-  SND.money();
-  toast('+$'+(3+G.a+hustle)+' +$'+i+'利息');G.ph='shop';G.rr=2+G.vouchers.filter(function(v){return v==='v_reroll';}).length;shs();saveGame();
+  setTimeout(function(){celOv.remove();SND.money();toast('+$'+(3+G.a+hustle)+' +$'+i+'利息');G.ph='shop';G.rr=2+G.vouchers.filter(function(v){return v==='v_reroll';}).length;shs();saveGame();},1200);
 }
 function lr(){G.ph='result';shr(false);clearSave();}
 
