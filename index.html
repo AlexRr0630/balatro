@@ -883,6 +883,9 @@ function showJokerDetail(idx){
 }
 
 function rr(){
+  // 防闪屏：先隐藏再重建，避免 innerHTML='' 造成中间帧空白
+  var jc=document.getElementById('joker-col');jc.style.visibility='hidden';
+  var cr=document.getElementById('cards-row');cr.style.visibility='hidden';
   document.getElementById('bn').textContent='ANTE '+G.a+' · '+BN[G.r-1];
   document.getElementById('bi').textContent='至少 '+G.tgt+' 分';
   document.getElementById('st').textContent=G.tgt;
@@ -923,7 +926,9 @@ function rr(){
   }
   document.getElementById('sbf').style.width=Math.min(100,G.sc/G.tgt*100)+'%';
   document.getElementById('sbt').textContent=G.sc+' / '+G.tgt;
-  var barEl=document.getElementById('sbf');barEl.classList.remove('score-bounce');void barEl.offsetWidth;barEl.classList.add('score-bounce');
+  // 只在分数真正变化时弹跳
+  var barEl=document.getElementById('sbf');
+  if(G._lastSc!==G.sc){barEl.classList.remove('score-bounce');void barEl.offsetWidth;barEl.classList.add('score-bounce');G._lastSc=G.sc;}
 
   // Joker column
   var jc=document.getElementById('joker-col');jc.innerHTML='';
@@ -1022,6 +1027,9 @@ function rr(){
   // 效果栏
   rrEffects();
   G._dealAnim=false;
+  // 恢复可见
+  jc.style.visibility='';
+  cr.style.visibility='';
 }
 
 function rrEffects(){
