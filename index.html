@@ -1,0 +1,1722 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>小丑牌 · Balatro</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#100a1a;--bg2:#1a1028;--bg3:#241538;
+  --red:#e74c3c;--gold:#f1c40f;--green:#2ecc71;--blue:#3498db;--purple:#9b59b6;
+  --chip:#27ae60;--mult:#e74c3c;--text:#e8d8f0;--text2:#a088c0;--card-front:#0d0a12;
+  --u:clamp(12px,1.2vw,24px);--u2:clamp(9px,0.85vw,16px);--u3:clamp(7px,0.7vw,14px);
+  --u4:clamp(14px,1.4vw,28px);--u5:clamp(20px,2vw,40px);--u6:clamp(28px,2.8vw,56px);
+  --cw:clamp(72px,8vw,120px);--ch:clamp(100px,11vw,160px);
+  --jw:clamp(80px,10vw,160px);--bh:clamp(36px,5vh,50px);
+}
+html,body{background:var(--bg);font-family:Georgia,'Times New Roman',serif;min-height:100vh;overflow-x:hidden;overflow-y:auto;user-select:none;color:var(--text);}
+body::after{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,0.06) 0px,rgba(0,0,0,0.06) 1px,transparent 1px,transparent 3px);}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 30% 20%,rgba(180,40,60,0.08),transparent 50%),radial-gradient(ellipse at 70% 80%,rgba(125,60,152,0.06),transparent 50%);}
+
+#game-wrap{position:relative;z-index:1;width:100%;min-height:100vh;display:flex;flex-direction:row;overflow-y:auto;}
+#game-main{flex:1;display:flex;flex-direction:column;min-width:0;}
+#effects-col{width:220px;border-left:1px solid rgba(155,89,182,0.15);background:rgba(26,16,40,0.6);padding:var(--u3);overflow-y:auto;flex-shrink:0;}
+.ef-title{font-size:var(--u4);font-weight:bold;color:var(--gold);font-family:monospace;margin-bottom:var(--u3);text-align:center;}
+#ef-list{display:flex;flex-direction:column;gap:var(--u3);}
+.ef-item{font-size:var(--u2);color:var(--text2);background:rgba(36,21,56,0.4);border:1px solid rgba(155,89,182,0.1);border-radius:4px;padding:var(--u3);line-height:1.3;}
+.ef-item-cat{font-size:var(--u3);font-weight:bold;color:var(--gold);margin-bottom:var(--u3);}
+.ef-item-line{margin-bottom:var(--u3);}
+#top-bar{display:flex;justify-content:space-between;align-items:center;padding:var(--u3) var(--u2);border-bottom:1px solid rgba(155,89,182,0.12);font-family:monospace;}
+.blind-name{font-size:var(--u4);color:var(--text);text-shadow:0 0 8px rgba(155,89,182,0.2);}
+.blind-info{font-size:var(--u2);color:var(--text2);}
+
+#joker-col{display:flex;flex-direction:row;gap:var(--u3);padding:var(--u3);overflow-x:auto;overflow-y:hidden;border-bottom:1px solid rgba(155,89,182,0.12);min-height:90px;max-height:110px;background:rgba(16,8,26,0.3);}
+.joker-slot{min-height:80px;width:90px;background:rgba(26,16,40,0.7);border:2px solid rgba(155,89,182,0.2);border-radius:8px;padding:var(--u3) var(--u2);display:flex;flex-direction:column;align-items:center;gap:var(--u3);transition:all 0.2s;position:relative;overflow:hidden;cursor:grab;flex-shrink:0;}
+.joker-slot::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 20%,rgba(155,89,182,0.08),transparent);pointer-events:none;}
+.joker-slot:hover{border-color:var(--gold);box-shadow:0 0 12px rgba(241,196,15,0.25);}
+.joker-slot.dragging{opacity:0.4;border-color:var(--gold);}
+.joker-slot.ed-foil{border-color:#c49614;box-shadow:0 0 10px rgba(196,150,20,0.35);}
+.joker-slot.ed-holographic{border-color:#5dade2;box-shadow:0 0 10px rgba(93,173,226,0.35);}
+.joker-slot.ed-polychrome{border-color:#e74c3c;box-shadow:0 0 12px rgba(231,76,60,0.35);}
+.joker-slot.ed-negative{border-color:#7f8c8d;box-shadow:0 0 10px rgba(127,140,141,0.35);background:rgba(40,40,40,0.4);}
+.joker-slot.drag-over{border-color:var(--gold);box-shadow:0 0 18px rgba(241,196,15,0.35);transform:scale(1.05);}
+.jk-emoji{font-size:var(--u5);}.jk-name{font-size:var(--u3);font-weight:bold;color:var(--gold);text-align:center;line-height:1.1;}
+.jk-desc{font-size:var(--u2);color:var(--text2);text-align:center;line-height:1.2;}
+.jk-num{position:absolute;top:2px;left:4px;font-size:var(--u2);color:var(--gold);font-family:monospace;opacity:0.5;}
+.joker-empty{width:90px;min-height:80px;border:1px dashed rgba(155,89,182,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:var(--u3);color:rgba(155,89,182,0.25);font-family:monospace;background:rgba(26,16,40,0.3);flex-shrink:0;}
+
+#play-area{padding:var(--u3);gap:var(--u3);display:flex;flex-direction:column;flex:1;}
+#score-box{padding:var(--u3) var(--u2);background:rgba(26,16,40,0.5);border:1px solid rgba(155,89,182,0.1);border-radius:8px;text-align:center;}
+.sc-target{font-size:var(--u);color:var(--text2);font-family:monospace;margin-bottom:var(--u3);}
+.sc-target b{color:var(--gold);font-size:var(--u4);}
+.sc-nums{display:flex;justify-content:center;align-items:center;gap:var(--u3);font-family:monospace;}
+.sc-chip{font-size:var(--u6);font-weight:bold;color:var(--chip);text-shadow:0 1px 4px rgba(39,174,96,0.2);transition:all 0.3s;}
+.sc-mult{font-size:var(--u6);font-weight:bold;color:var(--mult);text-shadow:0 1px 4px rgba(192,57,43,0.2);transition:all 0.3s;}
+.sc-x{font-size:var(--u4);color:var(--text2);}.sc-eq{font-size:var(--u4);color:var(--text2);}
+.sc-tot{font-size:var(--u6);font-weight:bold;color:var(--gold);text-shadow:0 1px 4px rgba(212,160,23,0.2);transition:all 0.3s;}
+.sc-bar{height:var(--u4);background:rgba(0,0,0,0.08);border-radius:var(--u2);margin-top:var(--u2);position:relative;overflow:hidden;}
+.sc-bar-f{height:100%;border-radius:var(--u2);background:linear-gradient(90deg,var(--chip),var(--gold));transition:width 0.6s;}
+.sc-bar-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:var(--u2);color:var(--gold);font-weight:bold;font-family:monospace;text-shadow:0 0 4px rgba(241,196,15,0.4);}
+#hand-badge{text-align:center;font-size:var(--u);font-weight:bold;color:var(--gold);opacity:0;transition:opacity 0.3s;font-family:monospace;}
+#hand-badge.show{opacity:1;}
+#res-row{display:flex;gap:var(--u);justify-content:center;font-size:var(--u);font-family:monospace;}
+.res-h{color:var(--blue);}.res-d{color:var(--mult);}.res-m{color:var(--gold);}
+
+#sort-row{display:flex;gap:var(--u3);justify-content:center;padding:var(--u3) 0;}
+.sort-btn{font-family:monospace;font-size:var(--u3);padding:2px var(--u3);border:1px solid rgba(155,89,182,0.2);border-radius:3px;cursor:pointer;background:rgba(26,16,40,0.4);color:var(--text2);transition:all 0.2s;}
+.sort-btn:hover{border-color:var(--gold);color:var(--gold);background:rgba(36,21,56,0.5);}
+
+#cards-row{display:flex;gap:var(--u3);justify-content:center;align-items:flex-end;padding:var(--u2) var(--u3);min-height:var(--ch);max-height:calc(var(--ch)*1.4);overflow-x:auto;}
+#cards-row::-webkit-scrollbar{height:3px;}#cards-row::-webkit-scrollbar-thumb{background:rgba(155,89,182,0.2);border-radius:2px;}
+#cons-row{display:flex;gap:var(--u3);justify-content:center;padding:var(--u2) 0;align-items:center;}
+.cons-slot{width:90px;height:80px;background:rgba(26,16,40,0.6);border:2px dashed rgba(155,89,182,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;flex-direction:column;gap:var(--u3);flex-shrink:0;}
+.cons-slot.filled{border-style:solid;border-color:var(--purple);background:rgba(36,21,56,0.6);}
+.cons-slot:hover:not(.empty){transform:scale(1.1);border-color:var(--gold);box-shadow:0 0 14px rgba(241,196,15,0.3);}
+.cons-e{font-size:var(--u5);}
+.cons-n{font-size:var(--u3);color:var(--text2);text-align:center;}
+.cons-slot-joker{border-color:var(--gold);} .cons-slot-planet{border-color:#5dade2;} .cons-slot-tarot{border-color:var(--purple);}
+.card{width:var(--cw);height:var(--ch);background:var(--card-front);border:2.5px solid rgba(241,196,15,0.3);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;font-weight:bold;box-shadow:0 3px 10px rgba(241,196,15,0.15),0 2px 6px rgba(0,0,0,0.5);flex-shrink:0;transition:transform 0.12s,border-color 0.12s,box-shadow 0.12s;}
+.card::before{content:'';position:absolute;inset:4px;border:1.5px solid rgba(241,196,15,0.08);border-radius:7px;pointer-events:none;}
+.card .cr{position:absolute;top:6px;left:7px;font-size:clamp(11px,1.3vw,16px);font-weight:bold;line-height:1;display:flex;flex-direction:column;align-items:center;gap:0;}
+.card .cr .r{font-size:clamp(13px,1.5vw,18px);line-height:1;}
+.card .cr .cr-s{font-size:clamp(11px,1.3vw,16px);line-height:1;}
+.card .s-center{font-size:clamp(22px,3vw,36px);line-height:1;z-index:1;margin:0;}
+.card .br{position:absolute;bottom:6px;right:7px;font-size:clamp(11px,1.3vw,16px);font-weight:bold;line-height:1;display:flex;flex-direction:column;align-items:center;gap:0;transform:rotate(180deg);}
+.card .br .r{font-size:clamp(13px,1.5vw,18px);line-height:1;}
+.card .br .br-s{font-size:clamp(11px,1.3vw,16px);line-height:1;}
+.card.red{color:#e74c3c;text-shadow:0 0 6px rgba(231,76,60,0.3);}.card.black{color:var(--gold);text-shadow:0 0 4px rgba(241,196,15,0.2);}
+.card.sel{transform:translateY(-8px) scale(1.04);border-color:var(--gold);box-shadow:0 10px 24px rgba(241,196,15,0.35),0 0 18px rgba(241,196,15,0.2);z-index:10;}
+.card:hover:not(.sel){transform:translateY(calc(var(--u2)*-0.7));border-color:var(--gold);}
+@keyframes flyOut{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-60px) scale(0.3);opacity:0}}
+.card.fly{animation:flyOut 0.3s ease forwards;}
+.card.enh-lucky{border-color:#2ecc71;box-shadow:0 0 10px rgba(46,204,113,0.4);}
+.card.enh-mult{border-color:#e74c3c;box-shadow:0 0 10px rgba(231,76,60,0.3);}
+.card.enh-bonus{border-color:#f1c40f;box-shadow:0 0 10px rgba(241,196,15,0.4);}
+.card.enh-wild{border-color:#9b59b6;box-shadow:0 0 10px rgba(155,89,182,0.3);}
+.card.enh-steel{border-color:#7f8c8d;box-shadow:0 0 10px rgba(127,140,141,0.5);}
+.card.enh-glass{border-color:#3498db;box-shadow:0 0 10px rgba(52,152,219,0.5);}
+.card.enh-gold{border-color:#f39c12;box-shadow:0 0 10px rgba(243,156,18,0.4);}
+.card.enh-stone{border-color:#95a5a6;box-shadow:0 0 10px rgba(149,165,166,0.4);}
+
+#btn-row{display:flex;gap:var(--u);justify-content:center;padding:var(--u3);}
+.btn{font-family:monospace;font-size:var(--u);font-weight:bold;padding:var(--u) calc(var(--u)*1.5);border:2px solid;border-radius:5px;cursor:pointer;background:rgba(26,16,40,0.4);transition:all 0.2s;color:var(--text2);}
+.btn:disabled{opacity:0.2;cursor:not-allowed;}
+.btn-p{color:var(--chip);border-color:var(--chip);}.btn-p:hover:not(:disabled){background:rgba(39,174,96,0.15);box-shadow:0 0 12px rgba(39,174,96,0.2);}
+.btn-d{color:var(--mult);border-color:var(--mult);}.btn-d:hover:not(:disabled){background:rgba(231,76,60,0.1);box-shadow:0 0 12px rgba(231,76,60,0.15);}
+
+#preview-row{display:none;text-align:center;padding:var(--u2);font-family:monospace;}
+#preview-row.show{display:block;}
+.pv-text{font-size:var(--u3);color:var(--text2);}
+.pv-score{font-size:var(--u5);color:var(--gold);font-weight:bold;text-shadow:0 0 10px rgba(241,196,15,0.3);}
+.pv-label{font-size:var(--u2);color:var(--gold);opacity:0.7;}
+
+#landscape-toggle{position:fixed;top:8px;left:8px;z-index:500;font-family:monospace;font-size:var(--u);font-weight:bold;padding:var(--u3) var(--u);background:rgba(240,230,246,0.95);border:2px solid var(--gold);color:var(--gold);border-radius:4px;cursor:pointer;transition:all 0.2s;display:none;}
+@media(max-width:700px){
+  #landscape-toggle{display:block;}
+  #game-wrap{flex-direction:column;}
+  #effects-col{width:100%;border-left:none;border-top:1px solid rgba(125,60,152,0.1);max-height:200px;}
+}
+body.force-landscape #game-wrap{position:fixed;top:0;left:0;width:100vh;height:100vw;transform-origin:top left;transform:rotate(90deg) translateY(-100vw);overflow-y:auto;z-index:10;}
+body.force-landscape #landscape-toggle{position:fixed;top:8px;left:8px;transform:none;z-index:501;border-color:var(--mult);color:var(--mult);}
+/* 横屏游戏区域 */
+body.force-landscape #joker-col{min-height:36px;gap:2px;padding:2px 4px;}body.force-landscape #joker-col::-webkit-scrollbar{height:2px;}
+body.force-landscape .joker-slot{min-height:30px;width:44px;padding:1px 2px;gap:0px;}
+body.force-landscape .jk-emoji{font-size:12px;}.force-landscape .jk-name{font-size:6px;}.force-landscape .jk-desc{font-size:5px;}.force-landscape .jk-num{font-size:5px;}
+body.force-landscape .joker-empty{min-height:30px;font-size:6px;}
+body.force-landscape #play-area{padding:4px 6px;gap:2px;}
+body.force-landscape #top-bar{padding:4px 6px;}
+body.force-landscape .blind-name{font-size:12px;}.force-landscape .blind-info{font-size:9px;}
+body.force-landscape #res-row{font-size:9px;gap:4px;}
+body.force-landscape #btn-row{padding:2px;}.force-landscape .btn{font-size:10px;padding:4px 10px;}
+body.force-landscape #cards-row{min-height:60px;max-height:80px;gap:2px;padding:2px;}
+body.force-landscape .card{width:44px;height:60px;}.force-landscape .card .r{font-size:10px;}.force-landscape .card .s{font-size:14px;}.force-landscape .card .v{font-size:5px;}
+/* 横屏overlay: 跟game-wrap一起旋转,内容横向布局适配窄视口 */
+body.force-landscape .start-ov,body.force-landscape .ov{
+  width:100vh;height:100vw;
+  transform-origin:top left;
+  transform:rotate(90deg) translateY(-100vw);
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:6px 8px;
+}
+body.force-landscape #toast{
+  transform:rotate(90deg) translateY(-100vw);
+  width:100vh;left:0;top:auto;bottom:8px;
+}
+/* 横屏商店: 所有分类横排,卡片极紧凑 */
+body.force-landscape .shop-it{width:64px;min-height:72px;padding:2px;gap:1px;border-radius:4px;}
+body.force-landscape .si-e{font-size:18px;}
+body.force-landscape .si-n{font-size:8px;line-height:1;}
+body.force-landscape .si-d{font-size:7px;line-height:1;max-height:18px;overflow:hidden;}
+body.force-landscape .si-p{font-size:9px;}
+body.force-landscape .shop-t{font-size:13px;margin-bottom:3px;}
+body.force-landscape .sb{font-size:11px;padding:6px 14px;border-radius:4px;}
+body.force-landscape .shop-btns{margin-top:4px;gap:6px;}
+/* 横屏评分/结果 */
+body.force-landscape .sc-ov-title{font-size:18px;margin-bottom:6px;}
+body.force-landscape .sc-ov-cards{gap:4px;flex-wrap:wrap;}
+body.force-landscape .sc-ov-card{width:40px;height:56px;}
+body.force-landscape .sc-ov-card .r{font-size:9px;}
+body.force-landscape .sc-ov-card .s{font-size:13px;}
+body.force-landscape .sc-ov-nums{font-size:20px;gap:6px;}
+body.force-landscape .sc-ov-eq{font-size:12px;}
+body.force-landscape .sc-ov-jk .jl{font-size:9px;padding:2px 6px;}
+body.force-landscape .res-t{font-size:18px;}
+body.force-landscape .res-s{font-size:11px;}
+body.force-landscape .st-t{font-size:28px;}
+body.force-landscape .st-s{font-size:12px;}
+body.force-landscape .st-b{font-size:12px;padding:6px 16px;}
+
+/* Overlays */
+.ov{position:fixed;inset:0;z-index:100;background:rgba(10,6,20,0.96);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:var(--u);overflow-y:auto;}
+.sc-ov-title{font-size:var(--u5);color:var(--gold);margin-bottom:var(--u);font-family:monospace;text-shadow:0 0 12px rgba(241,196,15,0.35);}
+.sc-ov-cards{display:flex;gap:var(--u3);margin-bottom:var(--u);justify-content:center;flex-wrap:wrap;}
+.sc-ov-card{width:calc(var(--cw)*0.8);height:calc(var(--ch)*0.8);background:var(--card-front);border:2px solid #aaa;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:bold;opacity:0.25;transition:all 0.3s;flex-shrink:0;}
+.sc-ov-card .r{font-size:var(--u2);}.sc-ov-card .s{font-size:var(--u4);margin-top:1px;}
+.sc-ov-card.red{color:var(--red);}.sc-ov-card.black{color:#2c3e50;}
+.sc-ov-card.on{opacity:1;transform:scale(1.1);border-color:var(--chip);box-shadow:0 0 14px rgba(46,174,96,0.5);}
+.sc-ov-nums{display:flex;gap:var(--u);align-items:center;font-size:var(--u5);font-weight:bold;font-family:monospace;margin-bottom:var(--u);}
+.sc-ov-chip{color:var(--chip);}.sc-ov-mult{color:var(--mult);}.sc-ov-eq{color:var(--text2);font-size:var(--u4);}.sc-ov-tot{color:var(--gold);}
+.sc-ov-jk{font-size:var(--u);color:var(--text2);}
+.sc-ov-jk .jl{padding:var(--u3) var(--u2);border-radius:3px;margin:var(--u3) 0;background:rgba(125,60,152,0.06);border:1px solid rgba(125,60,152,0.06);opacity:0;transition:opacity 0.3s;}
+.sc-ov-jk .jl.on{opacity:1;}
+.sc-ov-jk .jl.xmult{border-color:rgba(241,196,15,0.3);background:rgba(241,196,15,0.06);}
+.sc-ov-jk .jl.chips{border-color:rgba(39,174,96,0.3);background:rgba(39,174,96,0.06);}
+.sc-ov-jk .jl.mult{border-color:rgba(176,48,32,0.15);background:rgba(176,48,32,0.04);}
+.sc-ov-jk .jl.chips_edition{border-color:rgba(241,196,15,0.4);background:rgba(241,196,15,0.08);}
+.sc-ov-jk .jl.xmult_edition{border-color:rgba(125,60,152,0.4);background:rgba(125,60,152,0.08);}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+@keyframes shk{0%,100%{transform:translate(0)}10%{transform:translate(-3px,1px)}30%{transform:translate(3px,-1px)}50%{transform:translate(-1px,3px)}}
+@keyframes cardIn{0%{transform:translateY(30px) scale(0.8);opacity:0}60%{transform:translateY(-3px) scale(1.02);opacity:1}100%{transform:translateY(0) scale(1);opacity:1}}
+@keyframes cardFlip{0%{transform:rotateY(90deg);opacity:0}100%{transform:rotateY(0);opacity:1}}
+@keyframes glowPulse{0%,100%{box-shadow:0 0 5px rgba(241,196,15,0.2)}50%{box-shadow:0 0 20px rgba(241,196,15,0.5)}}
+@keyframes moneyPop{0%{transform:scale(1)}30%{transform:scale(1.3);color:#f1c40f}100%{transform:scale(1)}}
+@keyframes toastIn{0%{transform:translateY(20px);opacity:0}100%{transform:translateY(0);opacity:1}}
+@keyframes scoreBounce{0%{transform:scale(1)}30%{transform:scale(1.15)}100%{transform:scale(1)}}
+@keyframes jokerActivate{0%{transform:scale(1);filter:brightness(1)}30%{transform:scale(1.08);filter:brightness(1.3)}60%{transform:scale(0.98)}100%{transform:scale(1);filter:brightness(1)}}
+@keyframes dealSlide{0%{transform:translateX(-60px) translateY(20px) scale(0.6);opacity:0}100%{transform:translateX(0) translateY(0) scale(1);opacity:1}}
+@keyframes chipFly{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-40px) scale(0.5);opacity:0}}
+@keyframes blindReveal{0%{transform:perspective(600px) rotateX(30deg);opacity:0;filter:blur(4px)}100%{transform:perspective(600px) rotateX(0);opacity:1;filter:blur(0)}}
+.pop{animation:pop 0.2s ease}.shk{animation:shk 0.3s ease}
+.card-in{animation:cardIn 0.35s ease-out}
+.card-flip{animation:cardFlip 0.3s ease-out}
+.glow-pulse{animation:glowPulse 1.5s ease-in-out infinite}
+.money-pop{animation:moneyPop 0.3s ease}
+.toast-in{animation:toastIn 0.25s ease-out}
+.score-bounce{animation:scoreBounce 0.3s ease}
+.jk-activate{animation:jokerActivate 0.35s ease}
+.deal-slide{animation:dealSlide 0.4s ease-out forwards}
+.blind-reveal{animation:blindReveal 0.5s ease-out}
+
+/* ===== Balatro-style Shop Layout ===== */
+.shop-t{font-size:var(--u4);color:var(--gold);margin-bottom:var(--u3);font-family:monospace;text-shadow:0 0 12px rgba(241,196,15,0.3);}
+.shop-row-label{font-size:var(--u3);font-weight:bold;font-family:monospace;margin:var(--u3) 0 var(--u2) 0;display:flex;align-items:center;gap:var(--u2);color:var(--text);}
+.shop-row-label-dot{display:inline-block;width:4px;height:var(--u2);border-radius:2px;box-shadow:0 0 6px currentColor;}
+.shop-scroll{display:flex;gap:var(--u2);flex-wrap:wrap;}
+.shop-it{
+  width:clamp(58px,10vw,78px);min-height:clamp(60px,10vw,84px);
+  background:rgba(26,16,40,0.7);border:2px solid rgba(155,89,182,0.2);border-radius:8px;
+  padding:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;transition:all 0.2s;flex-shrink:0;gap:1px;
+}
+.shop-it-joker{border-color:rgba(241,196,15,0.4);background:rgba(40,20,10,0.65);}
+.shop-it-planet{border-color:rgba(52,152,219,0.4);background:rgba(10,20,40,0.65);}
+.shop-it-tarot{border-color:rgba(155,89,182,0.35);background:rgba(30,15,40,0.65);}
+.shop-it-pack{border-color:rgba(230,126,34,0.45);background:rgba(40,20,10,0.6);}
+.shop-it-voucher{border-color:rgba(46,204,113,0.45);background:rgba(10,30,15,0.6);}
+.shop-it-spectral{border-color:rgba(142,68,173,0.5);background:rgba(30,10,40,0.65);}
+.shop-it:hover:not(.sold):not(.nom){transform:translateY(-4px) scale(1.05);box-shadow:0 6px 20px rgba(0,0,0,0.4);}
+.shop-it-joker:hover:not(.sold):not(.nom){border-color:var(--gold);box-shadow:0 0 24px rgba(241,196,15,0.35);}
+.shop-it-planet:hover:not(.sold):not(.nom){border-color:#3498db;box-shadow:0 0 24px rgba(52,152,219,0.35);}
+.shop-it-tarot:hover:not(.sold):not(.nom){border-color:var(--purple);box-shadow:0 0 20px rgba(155,89,182,0.3);}
+.shop-it-pack:hover:not(.sold):not(.nom){border-color:#e67e22;box-shadow:0 0 24px rgba(230,126,34,0.3);}
+.si-e{font-size:clamp(16px,2.2vw,24px);}
+.si-n{font-size:clamp(9px,1.1vw,12px);color:var(--gold);font-weight:bold;text-align:center;line-height:1.1;overflow:hidden;text-overflow:ellipsis;max-width:68px;}
+.si-d{font-size:clamp(7px,0.85vw,10px);color:var(--text2);text-align:center;line-height:1.15;max-height:28px;overflow:hidden;}
+.si-p{font-size:clamp(9px,1.1vw,13px);color:var(--gold);font-weight:bold;}
+.shop-it.sold{opacity:0.15;border-color:#555;cursor:not-allowed;}
+.shop-it.nom{opacity:0.3;cursor:not-allowed;}
+.shop-btns{display:flex;gap:var(--u2);margin-top:var(--u3);justify-content:center;}
+.sb{font-family:monospace;font-size:var(--u4);font-weight:bold;padding:var(--u) calc(var(--u)*2);border:2px solid;border-radius:6px;cursor:pointer;background:rgba(26,16,40,0.5);transition:all 0.2s;color:var(--text2);}
+.sb-c{color:var(--chip);border-color:var(--chip);}.sb-c:hover{background:rgba(39,174,96,0.1);box-shadow:0 0 14px rgba(39,174,96,0.2);}
+.sb-r{color:var(--text2);border-color:rgba(155,89,182,0.3);}.sb-r:hover:not(:disabled){background:rgba(155,89,182,0.08);border-color:var(--purple);}
+.sb-r:disabled{opacity:0.2;cursor:not-allowed;}
+
+.start-ov{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.start-ov::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(180,40,60,0.1),transparent 60%);}
+.st-t{font-size:var(--u6);font-weight:bold;color:var(--gold);text-shadow:0 2px 12px rgba(241,196,15,0.3);position:relative;z-index:2;}
+.st-s{font-size:var(--u);color:var(--text2);margin-bottom:var(--u5);position:relative;z-index:2;font-family:monospace;}
+.st-b{font-family:monospace;font-size:var(--u4);color:var(--gold);border:2px solid var(--gold);padding:var(--u) calc(var(--u)*2);border-radius:6px;cursor:pointer;background:transparent;transition:all 0.3s;position:relative;z-index:2;}
+.st-b:hover{background:rgba(241,196,15,0.15);box-shadow:0 0 24px rgba(241,196,15,0.3);transform:scale(1.04);}
+.res-t{font-size:var(--u5);margin-bottom:var(--u);font-family:monospace;}
+.res-s{font-size:var(--u);color:var(--text2);margin-bottom:var(--u3);}
+.res-w .res-t{color:var(--chip);}.res-l .res-t{color:var(--mult);}
+#toast{position:fixed;top:var(--u);left:50%;transform:translateX(-50%);font-size:var(--u);font-family:monospace;color:var(--gold);background:rgba(20,10,30,0.92);border:1px solid rgba(241,196,15,0.3);padding:var(--u3) var(--u);border-radius:4px;z-index:300;opacity:0;transition:opacity 0.3s;pointer-events:none;text-shadow:0 0 6px rgba(241,196,15,0.3);}
+#toast.on{opacity:1;}
+</style>
+</head>
+<body>
+<button id="landscape-toggle">🔄 横屏</button>
+
+<div id="game-wrap">
+  <div id="game-main">
+    <div id="top-bar"><div class="blind-name" id="bn">ANTE 1 · 小盲注</div><div class="blind-info" id="bi">至少 300 分</div></div>
+    <div id="joker-col"></div>
+    <div id="play-area">
+      <div id="score-box">
+        <div class="sc-target">目标 <b id="st">300</b></div>
+        <div class="sc-nums"><span class="sc-chip" id="sch">0</span><span class="sc-x">×</span><span class="sc-mult" id="smu">0</span><span class="sc-eq">=</span><span class="sc-tot" id="sto">0</span></div>
+        <div class="sc-bar"><div class="sc-bar-f" id="sbf" style="width:0%"></div><div class="sc-bar-text" id="sbt">0 / 300</div></div>
+      </div>
+      <div id="hand-badge"></div>
+      <div id="preview-row"><span class="pv-label"></span> · <span class="pv-score"></span></div>
+      <div id="res-row"><span class="res-h">🃏 出牌<span id="rh">4</span></span><span class="res-d">🗑 弃牌<span id="rd">3</span></span><span class="res-m">💰$<span id="rm">4</span></span></div>
+      <div id="sort-row"><button class="sort-btn" id="sortSuit">按花色</button><button class="sort-btn" id="sortRank">按面值</button></div>
+      <div id="cards-row"></div>
+      <div id="cons-row"></div>
+      <div id="btn-row"><button class="btn btn-p" id="bp">出牌</button><button class="btn btn-d" id="bd">弃牌</button></div>
+    </div>
+  </div>
+  <div id="effects-col"><div class="ef-title">📋 生效效果</div><div id="ef-list"></div></div>
+</div>
+<div id="toast"></div>
+<div id="start" class="start-ov" style="display:flex"><div class="st-t">🃏 小丑牌</div><div class="st-s">BALATRO · 拖动小丑牌调整顺序 · 按花色/面值排序手牌</div><div id="start-btns" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"><button class="st-b" id="goBtn">开始游戏</button><button class="st-b" id="loadBtn" style="display:none;border-color:#2ecc71;color:#2ecc71">💾 继续游戏</button></div></div>
+
+<script>
+// ===== Web Audio 音效引擎 (Balatro原版风格) =====
+var SND={ctx:null,vol:0.15};
+SND.init=function(){if(!this.ctx)this.ctx=new(window.AudioContext||window.webkitAudioContext)();};
+SND.resume=function(){if(this.ctx&&this.ctx.state==='suspended')this.ctx.resume();};
+SND.play=function(t,f,d,v,w){this.init();this.resume();var _=this.ctx;var o=_.createOscillator();var g=_.createGain();o.type=t||'sine';o.frequency.value=f||440;g.gain.setValueAtTime(v||0.15,_.currentTime);g.gain.exponentialRampToValueAtTime(0.001,_.currentTime+(d||0.15));if(w){o.type='triangle';var o2=_.createOscillator();o2.type='square';o2.frequency.value=f*1.5;o2.connect(g);o2.start();o2.stop(_.currentTime+d||0.15);}o.connect(g);g.connect(_.destination);o.start();o.stop(_.currentTime+d||0.15);};
+// 卡牌选择音
+SND.cardSel=function(){this.play('sine',880,0.06,0.12);};
+// 卡牌取消选择
+SND.cardDesel=function(){this.play('sine',440,0.05,0.08);};
+// 出牌音
+SND.playHand=function(){this.play('triangle',220,0.2,0.18,true);setTimeout(function(){SND.play('noise',0,0.05,0.04);},100);};
+// 弃牌音
+SND.discard=function(){this.play('sawtooth',150,0.15,0.06);};
+// 购买音
+SND.buy=function(){this.play('sine',1200,0.08,0.1);setTimeout(function(){SND.play('sine',1600,0.06,0.08);},60);};
+// 金币增加
+SND.money=function(){this.play('triangle',1800,0.1,0.08);};
+// 过关音
+SND.win=function(){var self=this;this.play('sine',523,0.15,0.15);setTimeout(function(){self.play('sine',659,0.12,0.15);},120);setTimeout(function(){self.play('sine',784,0.18,0.15);},240);};
+// 失败音
+SND.lose=function(){var self=this;this.play('sawtooth',330,0.25,0.08);setTimeout(function(){self.play('sawtooth',220,0.3,0.06);},150);};
+// 小丑触发音
+SND.joker=function(){this.play('sine',660,0.08,0.06);setTimeout(function(){SND.play('sine',990,0.06,0.05);},40);};
+// 分数跳动
+SND.score=function(){this.play('triangle',1200,0.04,0.04);};
+// Toast音
+SND.toast=function(){this.play('sine',600,0.05,0.04);};
+// 选择盲注
+SND.blind=function(){this.play('triangle',400,0.25,0.12);setTimeout(function(){SND.play('triangle',500,0.2,0.1);},150);};
+// 消耗品使用
+SND.consume=function(){this.play('sine',1000,0.1,0.08);setTimeout(function(){SND.play('sine',1400,0.08,0.06);},70);};
+// 开包
+SND.pack=function(){this.play('triangle',700,0.12,0.08);setTimeout(function(){SND.play('sine',900,0.1,0.06);},80);setTimeout(function(){SND.play('triangle',1100,0.08,0.05);},160);};
+// 出牌计分音(连续多声)
+SND.scoreSeq=function(n){for(var i=0;i<Math.min(n,5);i++){setTimeout(function(j){SND.play('triangle',600+j*150,0.03,0.03);},i*60,i);}};
+
+var S=['♠','♥','♦','♣'],SR={};SR['♥']=1;SR['♦']=1;
+var R=['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+var V={'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,'J':11,'Q':12,'K':13,'A':14};
+var BN=['小盲注','大盲注','Boss盲注'];
+var HT={'Royal Flush':{c:100,m:8,lc:40,lm:3},'Straight Flush':{c:100,m:8,lc:40,lm:3},'Four of a Kind':{c:60,m:7,lc:30,lm:3},'Full House':{c:40,m:4,lc:25,lm:2},'Flush':{c:35,m:4,lc:15,lm:2},'Straight':{c:30,m:4,lc:30,lm:3},'Three of a Kind':{c:30,m:3,lc:20,lm:2},'Two Pair':{c:20,m:2,lc:20,lm:1},'Pair':{c:10,m:2,lc:15,lm:1},'High Card':{c:5,m:1,lc:10,lm:1}};
+var HZ={'Royal Flush':'皇家同花顺','Straight Flush':'同花顺','Four of a Kind':'四条','Full House':'满堂红','Flush':'同花','Straight':'顺子','Three of a Kind':'三条','Two Pair':'两对','Pair':'对子','High Card':'高牌','Five of a Kind':'五条','Flush House':'同花满堂红','Flush Five':'同花五条'};
+
+var JP=[
+{id:'j1',n:'小丑',em:'🃏',d:'+4乘数',r:'c',ef:{t:'addMult',v:4}},
+{id:'j2',n:'贪心',em:'💎',d:'♦牌+3乘数',r:'c',ef:{t:'multPerSuit',s:'♦',v:3}},
+{id:'j3',n:'欲望',em:'♥️',d:'♥牌+3乘数',r:'c',ef:{t:'multPerSuit',s:'♥',v:3}},
+{id:'j4',n:'怒焰',em:'♠️',d:'♠牌+3乘数',r:'c',ef:{t:'multPerSuit',s:'♠',v:3}},
+{id:'j5',n:'暴食',em:'♣️',d:'♣牌+3乘数',r:'c',ef:{t:'multPerSuit',s:'♣',v:3}},
+{id:'j6',n:'欢快',em:'😄',d:'含对子+8乘数',r:'c',ef:{t:'multPerHand',h:'Pair',v:8}},
+{id:'j7',n:'滑稽',em:'🤪',d:'含三条+12乘数',r:'c',ef:{t:'multPerHand',h:'Three of a Kind',v:12}},
+{id:'j8',n:'疯狂',em:'😡',d:'含两对+10乘数',r:'c',ef:{t:'multPerHand',h:'Two Pair',v:10}},
+{id:'j9',n:'狂暴',em:'🔥',d:'含顺子+12乘数',r:'c',ef:{t:'multPerHand',h:'Straight',v:12}},
+{id:'j10',n:'呆趣',em:'😏',d:'含同花+10乘数',r:'c',ef:{t:'multPerHand',h:'Flush',v:10}},
+{id:'j11',n:'狡猾',em:'🤫',d:'含对子+50筹码',r:'c',ef:{t:'chipsPerHand',h:'Pair',v:50}},
+{id:'j12',n:'精明',em:'🧐',d:'含三条+100筹码',r:'c',ef:{t:'chipsPerHand',h:'Three of a Kind',v:100}},
+{id:'j13',n:'聪明',em:'🧠',d:'含两对+80筹码',r:'c',ef:{t:'chipsPerHand',h:'Two Pair',v:80}},
+{id:'j14',n:'诡诈',em:'😈',d:'含顺子+100筹码',r:'c',ef:{t:'chipsPerHand',h:'Straight',v:100}},
+{id:'j15',n:'巧手',em:'✋',d:'含同花+80筹码',r:'c',ef:{t:'chipsPerHand',h:'Flush',v:80}},
+{id:'j16',n:'半截',em:'½',d:'手牌≤3张+20乘数',r:'c',ef:{t:'addMult',v:20}},
+{id:'j17',n:'模板',em:'🔲',d:'每个空小丑槽×1乘数',r:'u',ef:{t:'xMultEmptySlots',v:1}},
+{id:'j22',n:'旗帜',em:'🚩',d:'每剩余弃牌+30筹码',r:'c',ef:{t:'chipsPerDiscardsLeft',v:30}},
+{id:'j27',n:'错印',em:'⚠️',d:'+0~23随机乘数',r:'c',ef:{t:'addMult',v:12}},
+{id:'j31',n:'斐波那契',em:'🔢',d:'A/2/3/5/8打出+8乘数',r:'u',ef:{t:'multPerFibonacci',v:8}},
+{id:'j33',n:'恐怖脸',em:'👻',d:'人头牌+30筹码',r:'c',ef:{t:'chipsPerFace',v:30}},
+{id:'j34',n:'抽象',em:'🌀',d:'每个小丑+3乘数',r:'c',ef:{t:'multPerJoker',v:3}},
+{id:'j39',n:'偶数史蒂文',em:'⚖️',d:'偶数面值+4乘数',r:'c',ef:{t:'multEvenRank',v:4}},
+{id:'j40',n:'奇数托德',em:'🎲',d:'奇数面值+31筹码',r:'c',ef:{t:'chipsOddRank',v:31}},
+{id:'j41',n:'学者',em:'🎓',d:'A打出+20筹码+4乘数',r:'c',ef:{t:'chipsPerRankAce',cv:20,mv:4}},
+{id:'j48',n:'黑板',em:'📋',d:'手牌全黑花色×3乘数',r:'u',ef:{t:'xMultBlackHand',v:3}},
+{id:'j53',n:'蓝色',em:'🔵',d:'牌组剩余每张+2筹码',r:'c',ef:{t:'chipsPerDeckCards',v:2}},
+{id:'j72',n:'男爵',em:'👑',d:'手中每张K×1.5乘数',r:'r',ef:{t:'xMultPerKingHeld',v:1.5}},
+{id:'j78',n:'照片',em:'📷',d:'首张人头牌×2乘数',r:'c',ef:{t:'multFirstFace',v:2}},
+{id:'j104',n:'笑脸',em:'😊',d:'人头牌+5乘数',r:'c',ef:{t:'multPerFace',v:5}},
+{id:'j147',n:'特里布莱',em:'🫅',d:'K/Q打出×2乘数',r:'l',ef:{t:'addMult',v:4}},
+{id:'j18',n:'四指',em:'🖐',d:'同花和顺子可用4张牌组成',r:'u',ef:{t:'effect',sub:'fourFingers'}},
+{id:'j19',n:'模仿',em:'🎭',d:'重触发手中所有牌能力',r:'u',ef:{t:'effect',sub:'retrigger'}},
+{id:'j20',n:'信用卡',em:'💳',d:'允许负债至-$20',r:'c',ef:{t:'effect',sub:'economy'}},
+{id:'j23',n:'神秘巅峰',em:'🏔',d:'弃牌为0时+15乘数',r:'c',ef:{t:'addMult',v:15}},
+{id:'j24',n:'大理石',em:'🏛',d:'选盲注时牌组加入石头牌',r:'u',ef:{t:'effect',sub:'createCard'}},
+{id:'j25',n:'忠诚卡',em:'💳',d:'每6次出牌×4乘数',r:'u',ef:{t:'effect',sub:'loyaltyCard'}},
+{id:'j26',n:'8号球',em:'🎱',d:'打出8有概率创建塔罗牌',r:'c',ef:{t:'effect',sub:'createCard'}},
+{id:'j28',n:'黄昏',em:'🌆',d:'最后一手重触发所有打出牌',r:'u',ef:{t:'effect',sub:'retrigger'}},
+{id:'j29',n:'举手',em:'✊',d:'手中最低牌面值×2加乘数',r:'c',ef:{t:'effect',sub:'raisedFist'}},
+{id:'j30',n:'混乱',em:'🤡',d:'商店免费刷新1次',r:'c',ef:{t:'effect',sub:'economy'}},
+{id:'j32',n:'钢铁',em:'⚙️',d:'牌组每张钢铁牌×0.2乘数',r:'u',ef:{t:'effect',sub:'steelJoker'}},
+{id:'j35',n:'延迟满足',em:'⏳',d:'未用弃牌每张获$2',r:'c',ef:{t:'effect',sub:'economy'}},
+{id:'j36',n:'黑客',em:'💻',d:'重触发打出的2/3/4/5',r:'u',ef:{t:'effect',sub:'retrigger'}},
+{id:'j37',n:'幻脸',em:'👁',d:'所有牌视为人头牌',r:'u',ef:{t:'effect',sub:'pareidolia'}},
+{id:'j38',n:'大蘑菇',em:'🍄',d:'+15乘数,1/6概率自毁',r:'c',ef:{t:'effect',sub:'destroyChance'}},
+{id:'j42',n:'名片',em:'💼',d:'人头牌1/2概率获$2',r:'c',ef:{t:'effect',sub:'economy'}},
+{id:'j43',n:'超新星',em:'🌟',d:'牌型累计打出次数加乘数',r:'c',ef:{t:'effect',sub:'supernova'}},
+{id:'j44',n:'搭公交',em:'🚌',d:'无人头牌出牌每手+1乘数(累积)',r:'c',ef:{t:'effect',sub:'scalingMult'}},
+{id:'j45',n:'太空',em:'🚀',d:'1/4概率升级牌型等级',r:'u',ef:{t:'effect',sub:'spaceJoker'}},
+{id:'j46',n:'蛋',em:'🥚',d:'回合末卖出值+$3',r:'c',ef:{t:'effect',sub:'economy'}},
+{id:'j47',n:'窃贼',em:'🦹',d:'选盲注时+3出牌弃牌清零',r:'u',ef:{t:'effect',sub:'burglar'}},
+{id:'j49',n:'奔跑者',em:'🏃',d:'含顺子时+15筹码(累积)',r:'c',ef:{t:'effect',sub:'scalingChips'}},
+{id:'j50',n:'冰淇淋',em:'🍦',d:'+100筹码,每手-5筹码',r:'c',ef:{t:'effect',sub:'decayChips'}},
+{id:'j51',n:'DNA',em:'🧬',d:'首手单牌时复制加入牌组',r:'r',ef:{t:'effect',sub:'createCard'}},
+{id:'j52',n:'溅射',em:'💦',d:'所有打出牌计入得分',r:'c',ef:{t:'effect',sub:'splash'}},
+{id:'j54',n:'第六感',em:'🔮',d:'首手单张6销毁创建幽灵牌',r:'u',ef:{t:'effect',sub:'createCard'}},
+{id:'j55',n:'星座',em:'⭐',d:'使用星球牌×0.1乘数(累积)',r:'u',ef:{t:'effect',sub:'scalingXMult'}},
+{id:'j56',n:'徒步者',em:'🥾',d:'打出牌永久+5筹码',r:'u',ef:{t:'effect',sub:'hiker'}},
+{id:'j57',n:'无面',em:'😶',d:'弃3+人头牌同时获$5',r:'c',ef:{t:'effect',sub:'economy'}},
+{id:'j58',n:'绿色',em:'🟢',d:'出牌+1乘数/弃牌-1乘数',r:'c',ef:{t:'effect',sub:'scalingMult'}},
+{id:'j59',n:'叠加态',em:'⚛️',d:'含A和顺子时创建塔罗牌',r:'c',ef:{t:'effect',sub:'createCard'}},
+{id:'j60',n:'待办清单',em:'📝',d:'指定牌型获$4每轮更换',r:'c',ef:{t:'effect',sub:'economy'}},
+{id:'j61',n:'卡文迪许',em:'🍌',d:'×3乘数,1/1000概率自毁',r:'c',ef:{t:'effect',sub:'destroyChance'}},
+{id:'j62',n:'赌徒',em:'🎰',d:'重复牌型×3乘数',r:'u',ef:{t:'effect',sub:'cardSharp'}},
+{id:'j63',n:'红牌',em:'🟥',d:'跳过强化包+3乘数(累积)',r:'c',ef:{t:'effect',sub:'scalingMult'}},
+{id:'j64',n:'狂乱',em:'🌀',d:'选盲注×0.5乘数销毁随机小丑',r:'u',ef:{t:'effect',sub:'madness'}},
+{id:'j65',n:'方块',em:'🔷',d:'4张牌出牌+4筹码(累积)',r:'c',ef:{t:'effect',sub:'scalingChips'}},
+{id:'j66',n:'降灵会',em:'👻',d:'同花顺创建幽灵牌',r:'u',ef:{t:'effect',sub:'createCard'}},
+{id:'j67',n:'杂牌',em:'🃞',d:'选盲注时创建2个普通小丑',r:'c',ef:{t:'effect',sub:'createCard'}},
+{id:'j68',n:'吸血鬼',em:'🧛',d:'打出增强牌×0.1乘数(累积)',r:'u',ef:{t:'effect',sub:'scalingXMult'}},
+{id:'j69',n:'捷径',em:'🛤',d:'顺子允许间隔1级',r:'u',ef:{t:'effect',sub:'shortcut'}},
+{id:'j70',n:'全息',em:'📡',d:'牌加入牌组×0.25乘数(累积)',r:'u',ef:{t:'effect',sub:'scalingXMult'}},
+{id:'j71',n:'流浪者',em:'🧳',d:'余额≤$4时创建塔罗牌',r:'r',ef:{t:'effect',sub:'createCard'}},
+{id:'j73',n:'云端九号',em:'☁️',d:'牌组中每张9回合末获$1',r:'u',ef:{t:'effect',sub:'economy'}},
+{id:'j74',n:'火箭',em:'🚀',d:'回合末获$1击败Boss+$2递增',r:'u',ef:{t:'effect',sub:'economy'}},
+{id:'j75',n:'方尖碑',em:'🏛',d:'未打最常用牌型×0.2乘数(累积)',r:'r',ef:{t:'effect',sub:'scalingXMult'}},
+{id:'j76',n:'迈达斯面具',em:'🪙',d:'打出人头牌变金牌',r:'u',ef:{t:'effect',sub:'midasMask'}},
+{id:'j77',n:'摔角手',em:'🤼',d:'卖出此牌禁用当前Boss盲注',r:'u',ef:{t:'effect',sub:'bossDisable'}},
+{id:'j79',n:'礼品卡',em:'🎁',d:'回合末卖出值+$1',r:'u',ef:{t:'effect',sub:'economy'}},
+{id:'j80',n:'龟豆',em:'🐢',d:'+5手牌数每轮-1',r:'u',ef:{t:'effect',sub:'addHandSize'}},
+{id:'j81',n:'侵蚀',em:'⛰️',d:'牌组少每张牌+4乘数',r:'u',ef:{t:'effect',sub:'erosion'}},
+{id:'j82',n:'预留车位',em:'🅿️',d:'手中人头牌1/2概率获$1',r:'c',ef:{t:'effect',sub:'economy'}},
+{id:'j83',n:'邮购返利',em:'📮',d:'弃牌指定面值获$5',r:'c',ef:{t:'effect',sub:'economy'}},
+{id:'j84',n:'奔月',em:'🌙',d:'每$5余额额外+$1利息',r:'u',ef:{t:'effect',sub:'economy'}},
+{id:'j85',n:'幻觉',em:'💫',d:'开强化包概率创建塔罗牌',r:'c',ef:{t:'effect',sub:'createCard'}},
+{id:'j86',n:'占卜师',em:'🔮',d:'每使用塔罗牌+1乘数(累积)',r:'c',ef:{t:'effect',sub:'scalingMult'}},
+{id:'j87',n:'杂耍者',em:'🤹',d:'+1手牌数',r:'c',ef:{t:'effect',sub:'addHandSize'}},
+{id:'j88',n:'醉汉',em:'🍺',d:'+1弃牌数',r:'c',ef:{t:'effect',sub:'addDiscard'}},
+{id:'j89',n:'石头',em:'🪨',d:'牌组每张石头牌+25筹码',r:'u',ef:{t:'effect',sub:'stoneJoker'}},
+{id:'j90',n:'黄金',em:'🪙',d:'回合末获$4',r:'c',ef:{t:'effect',sub:'economy'}},
+{id:'j91',n:'幸运猫',em:'🐱',d:'幸运牌触发×0.25乘数(累积)',r:'u',ef:{t:'effect',sub:'scalingXMult'}},
+{id:'j92',n:'棒球卡',em:'⚾',d:'罕见小丑各×1.5乘数',r:'r',ef:{t:'effect',sub:'baseballCard'}},
+{id:'j93',n:'公牛',em:'🐂',d:'每$1余额+2筹码',r:'u',ef:{t:'effect',sub:'chipsPerMoney'}},
+{id:'j94',n:'健怡可乐',em:'🥤',d:'卖出创建免费双倍标签',r:'u',ef:{t:'effect',sub:'dietCola'}},
+{id:'j95',n:'交易卡',em:'🃟',d:'首弃单牌销毁获$3',r:'u',ef:{t:'effect',sub:'economy'}},
+{id:'j96',n:'闪光卡',em:'⚡',d:'商店刷新+2乘数(累积)',r:'u',ef:{t:'effect',sub:'scalingMult'}},
+{id:'j97',n:'爆米花',em:'🍿',d:'+20乘数每轮-4乘数',r:'c',ef:{t:'effect',sub:'decayMult'}},
+{id:'j98',n:'备用裤',em:'👖',d:'含两对+2乘数(累积)',r:'u',ef:{t:'effect',sub:'scalingMult'}},
+{id:'j99',n:'远古',em:'🏺',d:'指定花色×1.5乘数每轮换',r:'r',ef:{t:'effect',sub:'ancientJoker'}},
+{id:'j100',n:'拉面',em:'🍜',d:'×2乘数每弃牌-×0.01',r:'u',ef:{t:'effect',sub:'decayXMult'}},
+{id:'j101',n:'对讲机',em:'📻',d:'10/4打出+10筹码+4乘数',r:'c',ef:{t:'effect',sub:'walkieTalkie'}},
+{id:'j102',n:'苏打水',em:'🧊',d:'10手内重触发所有打出牌',r:'u',ef:{t:'effect',sub:'retrigger'}},
+{id:'j103',n:'城堡',em:'🏰',d:'弃指定花色+3筹码(累积)',r:'u',ef:{t:'effect',sub:'scalingChips'}},
+{id:'j105',n:'篝火',em:'🔥',d:'卖牌×0.25乘数(累积)',r:'r',ef:{t:'effect',sub:'scalingXMult'}},
+{id:'j146',n:'卡尼奥',em:'💀',d:'人头牌销毁×1乘数(累积)',r:'l',ef:{t:'effect',sub:'scalingXMult'}},
+{id:'j148',n:'约里克',em:'🪦',d:'每弃23张牌×1乘数',r:'l',ef:{t:'effect',sub:'scalingXMult'}},
+{id:'j149',n:'奇科',em:'💪',d:'禁用所有Boss盲注效果',r:'l',ef:{t:'effect',sub:'bossDisable'}},
+{id:'j150',n:'佩尔科',em:'🧪',d:'商店末创建随机消耗品复制',r:'l',ef:{t:'effect',sub:'createCard'}},
+];
+var PP=[
+  {id:'p_pluto',n:'冥王星',em:'⚫',h:'High Card',lvChips:10,lvMult:1},
+  {id:'p_mercury',n:'水星',em:'☿',h:'Pair',lvChips:15,lvMult:1},
+  {id:'p_uranus',n:'天王星',em:'🪐',h:'Two Pair',lvChips:20,lvMult:1},
+  {id:'p_venus',n:'金星',em:'♀',h:'Three of a Kind',lvChips:20,lvMult:2},
+  {id:'p_saturn',n:'土星',em:'♄',h:'Straight',lvChips:30,lvMult:3},
+  {id:'p_jupiter',n:'木星',em:'♃',h:'Flush',lvChips:15,lvMult:2},
+  {id:'p_earth',n:'地球',em:'🌎',h:'Full House',lvChips:25,lvMult:2},
+  {id:'p_mars',n:'火星',em:'♂',h:'Four of a Kind',lvChips:30,lvMult:3},
+  {id:'p_neptune',n:'海王星',em:'🌊',h:'Straight Flush',lvChips:40,lvMult:4},
+  {id:'p_x',n:'X行星',em:'❓',h:'Five of a Kind',lvChips:35,lvMult:3},
+  {id:'p_ceres',n:'谷神星',em:'🌑',h:'Flush House',lvChips:40,lvMult:4},
+  {id:'p_eris',n:'阋神星',em:'🔴',h:'Flush Five',lvChips:50,lvMult:3},
+];
+var TP=[
+  {id:'t_fool',n:'愚者',em:'🃏',d:'创建本次运行最后使用的塔罗/星球牌'},
+  {id:'t_magician',n:'魔术师',em:'🪄',d:'2张牌变为幸运牌'},
+  {id:'t_priestess',n:'女祭司',em:'🌙',d:'创建2张随机星球牌'},
+  {id:'t_empress',n:'女帝',em:'👑',d:'2张牌变为乘数牌'},
+  {id:'t_emperor',n:'皇帝',em:'🦁',d:'创建2张随机塔罗牌'},
+  {id:'t_hierophant',n:'教皇',em:'⛪',d:'2张牌变为奖励牌'},
+  {id:'t_lovers',n:'恋人',em:'❤️',d:'1张牌变为万能牌'},
+  {id:'t_chariot',n:'战车',em:'⚔️',d:'1张牌变为钢铁牌'},
+  {id:'t_justice',n:'正义',em:'⚖️',d:'1张牌变为玻璃牌'},
+  {id:'t_hermit',n:'隐士',em:'🧓',d:'金钱翻倍(上限$20)'},
+  {id:'t_wheel',n:'命运之轮',em:'🎡',d:'1/4概率给小丑加版面效果'},
+  {id:'t_strength',n:'力量',em:'💪',d:'2张牌面值+1'},
+  {id:'t_hanged',n:'倒吊人',em:'🪢',d:'销毁最多2张牌'},
+  {id:'t_death',n:'死神',em:'💀',d:'左牌复制右牌的属性'},
+  {id:'t_temperance',n:'节制',em:'🧪',d:'获得所有小丑卖出值总额(上限$50)'},
+  {id:'t_devil',n:'恶魔',em:'😈',d:'1张牌变为黄金牌'},
+  {id:'t_tower',n:'塔',em:'🏗️',d:'1张牌变为石头牌'},
+  {id:'t_star',n:'星',em:'⭐',d:'3张牌变为♦'},
+  {id:'t_moon',n:'月',em:'🌙',d:'3张牌变为♣'},
+  {id:'t_sun',n:'日',em:'☀️',d:'3张牌变为♥'},
+  {id:'t_judgement',n:'审判',em:'⚖️',d:'创建1个随机小丑'},
+  {id:'t_world',n:'世界',em:'🌐',d:'3张牌变为♠'},
+];
+
+// 幽灵牌(Spectral Cards) — 增强版塔罗但代价更大
+var SP=[
+  {id:'s_familiar',n:'眷属',em:'🦇',d:'销毁1张手牌,创建3张随机塔罗牌',cost:4},
+  {id:'s_grim',n:'死神',em:'⚰️',d:'销毁1张手牌,创建2张随机星球牌',cost:4},
+  {id:'s_incantation',n:'咒语',em:'📖',d:'销毁1张手牌,4张手牌变为随机花色',cost:4},
+  {id:'s_talisman',n:'护符',em:'🔯',d:'销毁1张手牌,1张手牌变黄金牌',cost:4},
+  {id:'s_aura',n:'光环',em:'✨',d:'销毁1张手牌,1张手牌变万能牌',cost:4},
+  {id:'s_wraith',n:'幽灵',em:'👻',d:'销毁1张手牌,创建1个随机小丑(可能稀有)',cost:4},
+  {id:'s_sigil',n:'印记',em:'🔮',d:'销毁1张手牌,1张牌变石头牌',cost:4},
+  {id:'s_ouija',n:'灵板',em:'🪬',d:'手牌上限-1,创建1个稀有小丑',cost:6},
+  {id:'s_eclypse',n:'蚀',em:'🌑',d:'销毁1张手牌,下次打出牌型×3乘数',cost:4},
+  {id:'s_medium',n:'灵媒',em:'🧿',d:'销毁1张手牌,创建1张随机幽灵牌',cost:4},
+  {id:'s_cryptid',n:'未知生物',em:'🦴',d:'销毁1张手牌,创建2个小丑',cost:6},
+];
+
+// 凭证系统(Vouchers) — 永久升级,可叠加
+var VC=[
+  {id:'v_overstock',n:'过剩',em:'📦',d:'商店物品+1',cost:10,stackable:true},
+  {id:'v_clearance',n:'清仓',em:'🏷️',d:'所有商品-50%',cost:10,stackable:false},
+  {id:'v_interest',n:'加息',em:'🏦',d:'利息上限+1(最高$25)',cost:10,stackable:true},
+  {id:'v_hone',n:'磨砺',em:'🗡️',d:'星球牌售价-$1',cost:10,stackable:false},
+  {id:'v_reroll',n:'重滚',em:'🔄',d:'免费重滚+1次',cost:10,stackable:true},
+  {id:'v_ante',n:'提升',em:'⬆️',d:'利息上限+1',cost:10,stackable:true},
+  {id:'v_tarot',n:'塔罗大师',em:'🃏',d:'消耗品槽位+1',cost:10,stackable:true},
+  {id:'v_planet',n:'星球大师',em:'🌍',d:'消耗品槽位+1',cost:10,stackable:true},
+  {id:'v_merchant',n:'商人',em:'💰',d:'所有牌售价-$2',cost:10,stackable:false},
+  {id:'v_hustle',n:'冲刺',em:'🏃',d:'每轮结束+$2',cost:10,stackable:false},
+];
+
+// 标签奖励(Tags) — 跳过盲注获得
+var TG=[
+  {id:'tg_double',n:'双倍',em:'✌️',d:'下次购买获得双倍效果'},
+  {id:'tg_skip',n:'跳过',em:'⏭️',d:'可再跳过一个盲注'},
+  {id:'tg_add',n:'加法',em:'➕',d:'本轮+25筹码基础'},
+  {id:'tg_hand',n:'手牌',em:'🤚',d:'本轮+1手牌数'},
+  {id:'tg_discard',n:'弃牌',em:'🗑️',d:'本轮+1弃牌数'},
+  {id:'tg_economy',n:'经济',em:'💵',d:'商店价格-$2'},
+  {id:'tg_top',n:'精选',em:'⭐',d:'下次商店只出现稀有小丑'},
+  {id:'tg_investment',n:'投资',em:'📈',d:'获得$25利息上限'},
+];
+
+function at(a,r){var b=[300,800,2000,5000,11000];var m=[1,1.5,2];return Math.round(b[a-1]*m[r-1]);}
+
+var G={},anim=false,dragIdx=-1;
+function init(){
+  G={a:1,r:1,money:4,hl:4,dl:3,sc:0,tgt:at(1,1),dk:[],hd:[],sel:[],jk:[],hLv:{},shop:[],ph:'play',rr:2,rc:5,cons:[],handCounts:{},bossFn:null,bossPlayedTypes:[],vouchers:[],tags:[],consMax:2,stats:{handsPlayed:0,discardsUsed:0,jokersBought:0,jokersSold:0,roundsPlayed:0,highestScore:0,moneyEarned:0,tarotsUsed:0,planetsUsed:0,spectralUsed:0,packsOpened:0},roundBonusChips:0,lastUsedConsumable:null};
+  for(var t in HT)G.hLv[t]=0;bd();sf(G.dk);dh();
+}
+// ===== 存档系统 =====
+function saveGame(){
+  var data={
+    a:G.a,r:G.r,money:G.money,hl:G.hl,dl:G.dl,sc:G.sc,tgt:G.tgt,
+    ph:G.ph,rr:G.rr,rc:G.rc,
+    hLv:G.hLv,
+    jk:G.jk.map(function(j){return {id:j.id,edition:j.edition||'none',dyn:j.dyn||null,dynX:j.dynX||null};}),
+    cons:G.cons.map(function(c){return {type:c.type,n:c.n,em:c.em,d:c.d,id:c.data.id};}),
+    bossFn:G.bossFn||null,
+    vouchers:G.vouchers,tags:G.tags,consMax:G.consMax,
+    stats:G.stats,roundBonusChips:G.roundBonusChips,
+    dk:G.dk.map(function(c){return {rank:c.rank,suit:c.suit,enh:c.enh||null,seal:c.seal||null};}),
+    hd:G.hd.map(function(c){return {rank:c.rank,suit:c.suit,enh:c.enh||null,seal:c.seal||null};}),
+    lastUsedConsumable:G.lastUsedConsumable?G.lastUsedConsumable.id:null,
+  };
+  try{localStorage.setItem('balatro_save',JSON.stringify(data));}catch(e){}
+}
+function loadGame(){
+  try{var raw=localStorage.getItem('balatro_save');if(!raw)return false;
+  var data=JSON.parse(raw);
+  G={a:data.a,r:data.r,money:data.money,hl:data.hl,dl:data.dl,sc:data.sc,tgt:data.tgt,
+    ph:data.ph,rr:data.rr,rc:data.rc,
+    hLv:data.hLv,dk:data.dk||[],hd:data.hd||[],sel:[],jk:[],shop:[],cons:[],handCounts:data.handCounts||{},bossFn:data.bossFn||null,bossPlayedTypes:[],
+    vouchers:data.vouchers||[],tags:data.tags||[],consMax:data.consMax||2,
+    stats:data.stats||{handsPlayed:0,discardsUsed:0,jokersBought:0,jokersSold:0,roundsPlayed:0,highestScore:0,moneyEarned:0,tarotsUsed:0,planetsUsed:0,spectralUsed:0,packsOpened:0},
+    roundBonusChips:data.roundBonusChips||0,lastUsedConsumable:null};
+  // Restore jokers from IDs + editions
+  if(data.jk){for(var i=0;i<data.jk.length;i++){
+    var jData=data.jk[i];
+    var jId=typeof jData==='object'?jData.id:jData;
+    var jEd=typeof jData==='object'?jData.edition:'none';
+    var jp=JP.find(function(j){return j.id===jId;});
+    if(jp){var jObj=Object.assign({},jp);jObj.edition=jEd;if(jData.dyn)jObj.dyn=jData.dyn;if(jData.dynX)jObj.dynX=jData.dynX;G.jk.push(jObj);}
+  }}
+  // Restore consumables from IDs
+  if(data.cons){for(var i=0;i<data.cons.length;i++){var c=data.cons[i];var pp=PP.find(function(p){return p.id===c.id;});var tp=TP.find(function(t){return t.id===c.id;});var sp=SP.find(function(s){return s.id===c.id;});if(c.type==='planet'&&pp)G.cons.push({type:'planet',em:c.em,n:c.n,d:c.d,data:pp});else if(c.type==='tarot'&&tp)G.cons.push({type:'tarot',em:c.em,n:c.n,d:c.d,data:tp});else if(c.type==='spectral'&&sp)G.cons.push({type:'spectral',em:c.em,n:c.n,d:c.d,data:sp});}}
+  // Restore deck/hand card objects
+  if(data.dk){G.dk=data.dk.map(function(c){return {rank:c.rank,suit:c.suit,enh:c.enh||null,seal:c.seal||null};});}
+  if(data.hd){G.hd=data.hd.map(function(c){return {rank:c.rank,suit:c.suit,enh:c.enh||null,seal:c.seal||null};});}
+  if(!G.dk.length)bd();
+  return true;
+  }catch(e){return false;}
+}
+function hasSave(){try{return !!localStorage.getItem('balatro_save');}catch(e){return false;}}
+function clearSave(){try{localStorage.removeItem('balatro_save');}catch(e){}}
+function bd(){G.dk=[];for(var i=0;i<S.length;i++)for(var j=0;j<R.length;j++){var card={rank:R[j],suit:S[i],enh:null,seal:null};G.dk.push(card);}}
+function sf(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}}
+function dh(){G.hd=[];G.sel=[];d8();}
+function d8(){G._dealAnim=true;var maxSize=8+G.jk.filter(function(j){return j.ef&&j.ef.t==='effect'&&j.ef.sub==='addHandSize';}).length;if(G.bossFn==='manacle')maxSize=Math.max(1,maxSize-1);while(G.hd.length<maxSize){if(!G.dk.length){bd();sf(G.dk);}G.hd.push(G.dk.shift());}
+  // Boss钩子：开始时销毁随机2张
+  if(G.bossFn==='hook'&&G.hd.length>2){sf(G.hd);G.hd.splice(Math.floor(Math.random()*G.hd.length),1);G.hd.splice(Math.floor(Math.random()*G.hd.length),1);toast('🪝 钩子销毁2张牌');}
+}
+function rf(){G.sel=[];d8();}
+
+function ev(cards){
+  if(!cards||!cards.length)return 'High Card';
+  var vs=cards.map(c=>V[c.rank]).sort((a,b)=>a-b),ss=cards.map(c=>c.suit);
+  var rc={};cards.forEach(c=>rc[c.rank]=(rc[c.rank]||0)+1);
+  var ct=[];for(var k in rc)ct.push(rc[k]);ct.sort((a,b)=>b-a);
+  // 规则型小丑：检查是否有 fourFingers/shortcut/pareidolia/splash
+  var hasFF=G.jk.some(function(j){return j.ef&&j.ef.t==='effect'&&j.ef.sub==='fourFingers';});
+  var hasSC=G.jk.some(function(j){return j.ef&&j.ef.t==='effect'&&j.ef.sub==='shortcut';});
+  var hasPar=G.jk.some(function(j){return j.ef&&j.ef.t==='effect'&&j.ef.sub==='pareidolia';});
+  var hasSplash=G.jk.some(function(j){return j.ef&&j.ef.t==='effect'&&j.ef.sub==='splash';});
+
+  var minStraight=hasFF?4:5; // 四指：顺子只需4张
+  var minFlush=hasFF?4:5;    // 四指：同花只需4张
+
+  var isF=cards.length>=minFlush&&ss.every(function(s){return s===ss[0];}),isS=false;
+  if(cards.length>=minStraight){
+    var v=[...new Set(vs)].sort(function(a,b){return a-b;});
+    // 捷径(shortcut)：顺子允许间隔1级
+    var maxGap=hasSC?2:1;
+    if(v.length>=minStraight){
+      for(var s=0;s<=v.length-minStraight;s++){
+        var ok=true,gaps=0;
+        for(var i=s+1;i<s+minStraight+s&&i<v.length;i++){
+          var gap=v[i]-v[i-1];
+          if(gap>maxGap){ok=false;break;}
+        }
+        // 需要连续minStraight-1个间隔都在maxGap内
+        var seqLen=0,cur=v[s];
+        for(var i=s;i<v.length;i++){
+          if(v[i]-cur<=maxGap){seqLen++;cur=v[i];}
+          else break;
+        }
+        if(seqLen>=minStraight)isS=true;
+      }
+    }
+    if(!isS&&vs.includes(14)){var v2=vs.map(function(x){return x===14?1:x;}).sort(function(a,b){return a-b;});var u2=[...new Set(v2)].sort(function(a,b){return a-b;});
+      if(u2.length>=minStraight){
+        for(var s=0;s<=u2.length-minStraight;s++){
+          var seqLen=0,cur=u2[s];
+          for(var i=s;i<u2.length;i++){
+            if(u2[i]-cur<=maxGap){seqLen++;cur=u2[i];}
+            else break;
+          }
+          if(seqLen>=minStraight)isS=true;
+        }
+      }
+    }
+  }
+  var isR=isF&&isS&&vs.includes(14)&&vs.includes(13)&&vs.includes(12);
+  if(isF&&isS)return isR?'Royal Flush':'Straight Flush';if(ct[0]===4)return 'Four of a Kind';if(ct[0]===3&&ct[1]>=2)return 'Full House';
+  if(isF)return 'Flush';if(isS)return 'Straight';if(ct[0]===3)return 'Three of a Kind';if(ct[0]===2&&ct[1]>=2)return 'Two Pair';
+  if(ct[0]===2)return 'Pair';return 'High Card';
+}
+
+function hc(t,l){
+  var base=HT[t]?HT[t].c:0;
+  // Find matching PP for lvChips
+  var pp=PP.find(function(p){return p.h===t});
+  var lvC=pp?pp.lvChips:(HT[t]?HT[t].lc:0);
+  return base+lvC*l;
+}
+function hm(t,l){
+  var base=HT[t]?HT[t].m:0;
+  var pp=PP.find(function(p){return p.h===t});
+  var lvM=pp?pp.lvMult:(HT[t]?HT[t].lm:0);
+  return base+lvM*l;
+}
+
+function jfxSeq(cards,ht){
+  var chips=hc(ht,G.hLv[ht])+cards.reduce(function(s,c){return s+(c.enh==='stone'?0:V[c.rank]);},0);
+  var mult=hm(ht,G.hLv[ht]);
+  // 牌面增强计分
+  cards.forEach(function(c){
+    if(c.enh==='bonus')chips+=30;
+    else if(c.enh==='mult')mult+=4;
+    else if(c.enh==='wild')mult+=4;
+    else if(c.enh==='stone')chips+=50;
+    else if(c.enh==='glass')mult*=2;
+    else if(c.enh==='steel')mult*=1.5;
+    else if(c.enh==='lucky'){if(Math.random()<0.25)mult+=20;else if(Math.random()<0.04)G.money+=4;}
+  });
+  // Boss枯萎：打出的人头牌乘数归零
+  if(G.bossFn==='plant'){var faceCards=cards.filter(function(c){var r=c.rank;return r==='J'||r==='Q'||r==='K'||r==='A';});if(faceCards.length>0)mult=Math.floor(mult/(faceCards.length+1));}
+  // 封印效果
+  cards.forEach(function(c){
+    if(c.seal==='red'){mult+=4;chips+=5;} // 红封印：重触发效果(简化为+4乘+5筹)
+    else if(c.seal==='purple'){chips+=10;} // 紫封印：弃牌时创建塔罗(简化为+10筹码)
+    else if(c.seal==='gold'){chips+=15;} // 金封印：回合末+$3(简化为+15筹码)
+    else if(c.seal==='blue'){chips+=20;} // 蓝封印：打出时创建星球(简化为+20筹码)
+  });
+  // 标签加法：本轮+25筹码
+  if(G.roundBonusChips>0)chips+=G.roundBonusChips;
+  var steps=[];
+  var isFace=function(rank){
+    if(G.jk.some(function(j){return j.ef&&j.ef.t==='effect'&&j.ef.sub==='pareidolia';}))return true;
+    return rank==='J'||rank==='Q'||rank==='K'||rank==='A';
+  };
+  var isEven=function(rank){var v=V[rank];return v%2===0&&v<=10;};
+  var isOdd=function(rank){var v=V[rank];return v%2===1;};
+  var isFib=function(rank){return rank==='A'||rank==='2'||rank==='3'||rank==='5'||rank==='8';};
+
+  for(var i=0;i<G.jk.length;i++){
+    var j=G.jk[i],e=j.ef,applied=false,stepType='';
+    // Simple numeric effects
+    if(e.t==='addChips'){chips+=e.v;applied=true;stepType='chips';}
+    else if(e.t==='addMult'){mult+=e.v;applied=true;stepType='mult';}
+    else if(e.t==='chipsPerCard'){chips+=e.v*cards.length;applied=true;stepType='chips';}
+    else if(e.t==='multPerSuit'){var n=cards.filter(c=>c.suit===e.s).length;if(n>0){mult+=e.v*n;applied=true;stepType='mult';}}
+    else if(e.t==='chipsPerSuit'){var n=cards.filter(c=>c.suit===e.s).length;if(n>0){chips+=e.v*n;applied=true;stepType='chips';}}
+    else if(e.t==='chipsPerHandsLeft'){chips+=e.v*G.hl;applied=true;stepType='chips';}
+    else if(e.t==='chipsPerDiscardsLeft'){chips+=e.v*G.dl;applied=true;stepType='chips';}
+    else if(e.t==='multPerHand'){if(ht===e.h){mult+=e.v;applied=true;stepType='mult';}}
+    else if(e.t==='chipsPerHand'){if(ht===e.h){chips+=e.v;applied=true;stepType='chips';}}
+    else if(e.t==='multPerJoker'){mult+=e.v*G.jk.length;applied=true;stepType='mult';}
+    else if(e.t==='chipsPerDeckCards'){chips+=e.v*G.dk.length;applied=true;stepType='chips';}
+    else if(e.t==='chipsPerFace'){var n=cards.filter(c=>isFace(c.rank)).length;if(n>0){chips+=e.v*n;applied=true;stepType='chips';}}
+    else if(e.t==='multPerFace'){var n=cards.filter(c=>isFace(c.rank)).length;if(n>0){mult+=e.v*n;applied=true;stepType='mult';}}
+    else if(e.t==='multEvenRank'){var n=cards.filter(c=>isEven(c.rank)).length;if(n>0){mult+=e.v*n;applied=true;stepType='mult';}}
+    else if(e.t==='chipsOddRank'){var n=cards.filter(c=>isOdd(c.rank)).length;if(n>0){chips+=e.v*n;applied=true;stepType='chips';}}
+    else if(e.t==='multPerFibonacci'){var n=cards.filter(c=>isFib(c.rank)).length;if(n>0){mult+=e.v*n;applied=true;stepType='mult';}}
+    else if(e.t==='chipsPerRankAce'){var n=cards.filter(c=>c.rank==='A').length;if(n>0){chips+=e.cv*n;mult+=e.mv*n;applied=true;stepType='mixed';}}
+    else if(e.t==='xMult'){mult*=e.v;applied=true;stepType='xmult';}
+    else if(e.t==='xMultPerRank'){var n=cards.filter(c=>c.rank===e.rk).length;if(n>0){mult*=Math.pow(e.v,n);applied=true;stepType='xmult';}}
+    else if(e.t==='xMultPerSuit'){var n=cards.filter(c=>c.suit===e.s).length;if(n>0){mult*=Math.pow(e.v,n);applied=true;stepType='xmult';}}
+    else if(e.t==='xMultPerKingHeld'){var n=cards.filter(c=>c.rank==='K').length;if(n>0){mult*=Math.pow(e.v,n);applied=true;stepType='xmult';}}
+    else if(e.t==='xMultEmptySlots'){var empty=Math.max(0,5-G.jk.length);if(empty>0){mult*=Math.pow(e.v,empty);applied=true;stepType='xmult';}}
+    else if(e.t==='xMultBlackHand'){var allBlack=cards.every(c=>c.suit==='♠'||c.suit==='♣');if(allBlack&&cards.length>0){mult*=e.v;applied=true;stepType='xmult';}}
+    else if(e.t==='multFirstFace'){var first=cards.find(function(c){return isFace(c.rank);});if(first){mult*=e.v;applied=true;stepType='xmult';}}
+    else if(e.t==='multPerUniqueSuit'){var u=new Set(cards.map(c=>c.suit));if(u.size>0){mult+=e.v*u.size;applied=true;stepType='mult';}}
+    // effect type
+    else if(e.t==='effect'){
+      // 衰减类：爆米花(+20递减)、冰淇淋(+100递减)、拉面(×2递减)
+      if(e.sub==='decayMult'){var dv=j.dyn||20;if(dv>0){mult+=dv;applied=true;stepType='mult';}}
+      else if(e.sub==='decayChips'){var dv=j.dyn||100;if(dv>0){chips+=dv;applied=true;stepType='chips';}}
+      else if(e.sub==='decayXMult'){var dvx=j.dynX||2;if(dvx>1){mult*=dvx;applied=true;stepType='xmult';}}
+      // 累积增长类 scaling
+      else if(e.sub==='scalingMult'){var sv=j.dyn||0;if(sv>0){mult+=sv;applied=true;stepType='mult';}}
+      else if(e.sub==='scalingChips'){var sv=j.dyn||0;if(sv>0){chips+=sv;applied=true;stepType='chips';}}
+      else if(e.sub==='scalingXMult'){var svX=j.dynX||1;if(svX>1){mult*=svX;applied=true;stepType='xmult';}}
+      else if(e.sub==='supernova'){var hCnt=G.handCounts;if(!hCnt)hCnt={};var cnt=hCnt[ht]||0;if(cnt>0){mult*=cnt;applied=true;stepType='mult';}}
+      else if(e.sub==='chipsPerMoney'){chips+=G.money*2;applied=true;stepType='chips';}
+      else if(e.sub==='baseballCard'){var un=G.jk.filter(function(jj){return jj.r==='u'&&jj.id!==j.id;}).length;if(un>0){mult*=Math.pow(1.5,un);applied=true;stepType='xmult';}}
+      else if(e.sub==='loyaltyCard'){var lc=j.dyn||0;if(lc>=6){mult*=4;applied=true;stepType='xmult';}}
+      else if(e.sub==='spaceJoker'){if(Math.random()<0.25){G.hLv[ht]++;toast('🚀 太空升级 '+HZ[ht]+'=>'+'Lv.'+(G.hLv[ht]+1));}applied=false;}
+      else if(e.sub==='destroyChance'){
+        if(j.id==='j38'){mult+=15;if(Math.random()<1/6){toast('🍄 大蘑菇自毁了!');G.jk.splice(G.jk.indexOf(j),1);}applied=true;stepType='mult';}
+        else if(j.id==='j61'){mult*=3;if(Math.random()<1/1000){toast('🍌 卡文迪许自毁了!');G.jk.splice(G.jk.indexOf(j),1);}applied=true;stepType='xmult';}
+        else{var cv=j.dyn||15;mult+=cv;applied=true;stepType='mult';}
+      }
+      else if(e.sub==='cardSharp'){var hCnt=G.handCounts;if(hCnt&&hCnt[ht]&&hCnt[ht]>=2){mult*=3;applied=true;stepType='xmult';}else{applied=false;}}
+      else if(e.sub==='raisedFist'){var minV=0;cards.forEach(c=>{var v=V[c.rank];if(v<minV||minV===0)minV=v;});if(minV>0){mult+=minV*2;applied=true;stepType='mult';}}
+      else if(e.sub==='erosion'){var removed=52-G.dk.length-G.hd.length;if(removed>0){mult+=4*removed;applied=true;stepType='mult';}}
+      else if(e.sub==='walkieTalkie'){var n=cards.filter(c=>c.rank==='10'||c.rank==='4').length;if(n>0){chips+=10*n;mult+=4*n;applied=true;stepType='mixed';}}
+      else if(e.sub==='stoneJoker'){var ns=G.dk.concat(G.hd).filter(function(c){return c.enh==='stone';}).length;if(ns>0){chips+=25*ns;applied=true;stepType='chips';}}
+      else if(e.sub==='steelJoker'){var ns=G.dk.concat(G.hd).filter(function(c){return c.enh==='steel';}).length;if(ns>0){mult*=1+0.2*ns;applied=true;stepType='xmult';}}
+      // Rules-affecting jokers (pareidolia, fourFingers, splash) - handled at scoring level
+      else if(e.sub==='pareidolia'){applied=false;}
+      else if(e.sub==='fourFingers'){applied=false;}
+      else if(e.sub==='shortcut'){applied=false;}
+      else if(e.sub==='splash'){applied=false;}
+      // 重触发类
+      else if(e.sub==='retrigger'){
+        if(j.id==='j28'){if(G.hl<=0){chips+=cards.reduce(function(s,c){return s+V[c.rank];},0);mult+=3;applied=true;stepType='mult';}else{applied=false;}}
+        else if(j.id==='j36'){var n=cards.filter(function(c){var v=V[c.rank];return v===2||v===3||v===4||v===5;}).length;if(n>0){chips+=n*5;applied=true;stepType='chips';}else{applied=false;}}
+        else if(j.id==='j102'){chips+=10;applied=true;stepType='chips';}
+        else{applied=false;}
+      }
+      // 经济类
+      else if(e.sub==='economy'){
+        if(j.id==='j35'){G.money+=G.dl*2;toast('延迟满足+$'+(G.dl*2));applied=false;}
+        else if(j.id==='j42'){var n=cards.filter(function(c){return isFace(c.rank);}).length;if(n>0&&Math.random()<0.5){G.money+=n*2;toast('名片+$'+(n*2));}applied=false;}
+        else if(j.id==='j73'){var n9=G.dk.concat(G.hd).filter(function(c){return c.rank==='9';}).length;G.money+=n9;toast('云端+$'+n9);applied=false;}
+        else if(j.id==='j74'){G.money+=1+G.a;toast('火箭+$'+(1+G.a));applied=false;}
+        else if(j.id==='j90'){G.money+=4;toast('黄金+$4');applied=false;}
+        else{applied=false;}
+      }
+      // 创建牌类
+      else if(e.sub==='createCard'){
+        if(j.id==='j24'){G.dk.push({rank:'🪨',suit:'stone',enh:'stone',seal:null});toast('大理石：牌组加入石头牌');applied=false;}
+        else if(j.id==='j26'){var n=cards.filter(function(c){return c.rank==='8';}).length;if(n>0&&Math.random()<0.25&&G.cons.length<G.consMax){var tp2=[...TP];sf(tp2);G.cons.push({type:'tarot',em:tp2[0].em,n:tp2[0].n,data:tp2[0],d:tp2[0].d});toast('8号球：创建塔罗牌');}applied=false;}
+        else if(j.id==='j59'){if(cards.some(function(c){return c.rank==='A';})&&isS&&G.cons.length<G.consMax){var tp3=[...TP];sf(tp3);G.cons.push({type:'tarot',em:tp3[0].em,n:tp3[0].n,data:tp3[0],d:tp3[0].d});toast('叠加态：创建塔罗牌');}applied=false;}
+        else if(j.id==='j66'){if((ht==='Straight Flush'||ht==='Flush'||ht==='Royal Flush')&&G.cons.length<G.consMax){var sp2=[...SP];sf(sp2);G.cons.push({type:'spectral',em:sp2[0].em,n:sp2[0].n,data:sp2[0],d:sp2[0].d});toast('降灵会：创建幽灵牌');}applied=false;}
+        else if(j.id==='j71'){if(G.money<=4&&G.cons.length<G.consMax){var tp4=[...TP];sf(tp4);G.cons.push({type:'tarot',em:tp4[0].em,n:tp4[0].n,data:tp4[0],d:tp4[0].d});toast('流浪者：创建塔罗牌');}applied=false;}
+        else{applied=false;}
+      }
+      // 迈达斯面具：打出人头牌变金牌
+      else if(e.sub==='midasMask'){cards.forEach(function(c){if(isFace(c.rank))c.enh='gold';});toast('迈达斯：人头牌变金牌');applied=false;}
+      // Boss禁用
+      else if(e.sub==='bossDisable'){if(j.id==='j149'){G.bossFn=null;toast('奇科：Boss已禁用');}applied=false;}
+      // 徒步者：打出牌永久+5筹码
+      else if(e.sub==='hiker'){chips+=5*cards.length;applied=true;stepType='chips';}
+      // 远古：指定花色×1.5
+      else if(e.sub==='ancientJoker'){var curSuit=j.dyn||S[Math.floor(Math.random()*4)];var n=cards.filter(function(c){return c.suit===curSuit;}).length;if(n>0){mult*=1.5;applied=true;stepType='xmult';}else{applied=false;}}
+      // 其他未实现
+      else{applied=false;}
+    }
+    if(applied)steps.push({joker:j,type:stepType,chips:chips,mult:mult,total:Math.round(chips*mult)});
+    // 版面效果：在每个小丑的基础效果之后叠加版面加成
+    if(j.edition&&j.edition!=='none'){
+      if(j.edition==='foil'){chips+=50;steps.push({joker:j,type:'chips_edition',chips:chips,mult:mult,total:Math.round(chips*mult)});}
+      else if(j.edition==='holographic'){mult*=1.5;steps.push({joker:j,type:'xmult_edition',chips:chips,mult:mult,total:Math.round(chips*mult)});}
+      else if(j.edition==='polychrome'){mult*=3;steps.push({joker:j,type:'xmult_edition',chips:chips,mult:mult,total:Math.round(chips*mult)});}
+      // negative 版面不加分，只是不占槽位（在购买和显示逻辑中处理）
+    }
+  }
+  return{chips:chips,mult:mult,total:Math.round(chips*mult),steps:steps};
+}
+
+function jfxDesc(j,cards,ht){
+  var e=j.ef,txt='';
+  if(e.t==='addChips')txt='+'+e.v+'筹码';
+  else if(e.t==='addMult')txt='+'+e.v+'×乘数';
+  else if(e.t==='chipsPerCard')txt='+('+e.v+'×'+cards.length+')筹码';
+  else if(e.t==='chipsPerSuit'){var n=cards.filter(c=>c.suit===e.s).length;txt='+('+e.v+'×'+n+')筹码';}
+  else if(e.t==='chipsPerHandsLeft')txt='+('+e.v+'×'+G.hl+')筹码';
+  else if(e.t==='multPerHand')txt='+'+e.v+'×乘数('+HZ[ht]+')';
+  else if(e.t==='multPerUniqueSuit'){var u=new Set(cards.map(c=>c.suit));txt='+('+e.v+'×'+u.size+')×乘数';}
+  else if(e.t==='xMult')txt='×'+e.v+'乘数';
+  else if(e.t==='xMultPerRank'){var n=cards.filter(c=>c.rank===e.rk).length;txt='×'+Math.pow(e.v,n).toFixed(1)+'乘数';}
+  else if(e.t==='xMultPerSuit'){var n=cards.filter(c=>c.suit===e.s).length;txt='×'+Math.pow(e.v,n).toFixed(1)+'乘数';}
+  return txt;
+}
+
+function jDynDesc(j){
+  var e=j.ef;
+  if(e&&e.t==='effect'){
+    if(e.sub==='decayMult'){var dv=j.dyn||20;return '+'+dv+'乘数(每轮-4)';}
+    if(e.sub==='decayChips'){var dv=j.dyn||100;return '+'+dv+'筹码(每手-5)';}
+    if(e.sub==='decayXMult'){var dvx=j.dynX||2;return '×'+dvx.toFixed(2)+'乘数(每弃牌-0.01)';}
+    if(e.sub==='scalingMult'){var sv=j.dyn||0;return j.d+' (当前:'+sv+'乘数)';}
+    if(e.sub==='scalingChips'){var sv=j.dyn||0;return j.d+' (当前:'+sv+'筹码)';}
+    if(e.sub==='scalingXMult'){var svX=j.dynX||1;return j.d+' (当前:×'+svX.toFixed(1)+')';}
+    if(e.sub==='loyaltyCard'){var lc=j.dyn||0;return '已出牌'+lc+'次,每6次×4乘数';}
+  }
+  return j.d;
+}
+
+function showJokerDetail(idx){
+  if(idx>=G.jk.length)return;
+  var j=G.jk[idx];
+  var ov=document.createElement('div');ov.className='ov';ov.id='jkOv';
+  var rarityColors={c:'#43a047',u:'#5dade2',r:'#e74c3c',l:'#9b59b6'};
+  var rarityNames={c:'普通',u:'罕见',r:'稀有',l:'传奇'};
+  var editionNames={none:'',foil:'🌟 闪烁版 (+50筹码)',holographic:'✨ 全息版 (×1.5乘数)',polychrome:'🌈 多彩版 (×3乘数)',negative:'💀 负片版 (不占槽位)'};
+  var desc=jDynDesc(j);
+  var sellPrice=3;
+  if(j.edition==='foil')sellPrice+=2;
+  else if(j.edition==='holographic')sellPrice+=4;
+  else if(j.edition==='polychrome')sellPrice+=8;
+  else if(j.edition==='negative')sellPrice+=5;
+  if(j.id==='j46')sellPrice+=3;
+  if(j.id==='j79')sellPrice+=1;
+  var h='<div style="text-align:center;max-width:320px">';
+  h+='<div style="font-size:var(--u6);margin-bottom:var(--u2)">'+j.em+'</div>';
+  h+='<div style="font-size:var(--u5);color:var(--gold);font-weight:bold;margin-bottom:var(--u2)">'+j.n+'</div>';
+  h+='<div style="font-size:var(--u3);color:'+rarityColors[j.r]+';margin-bottom:var(--u2)">['+rarityNames[j.r]+']</div>';
+  h+='<div style="font-size:var(--u4);color:var(--text2);margin-bottom:var(--u3);line-height:1.4">'+desc+'</div>';
+  if(j.edition&&j.edition!=='none')h+='<div style="font-size:var(--u3);color:var(--text2);margin-bottom:var(--u2)">'+editionNames[j.edition]+'</div>';
+  h+='<div style="font-size:var(--u3);color:var(--gold);margin-bottom:var(--u4)">卖出价: $'+sellPrice+'</div>';
+  h+='<div style="display:flex;gap:var(--u2);justify-content:center">';
+  h+='<button class="sb sb-c" id="jkSell" style="color:#e74c3c;border-color:#e74c3c">卖出 $'+sellPrice+'</button>';
+  h+='<button class="sb sb-r" id="jkClose">关闭</button>';
+  h+='</div></div>';
+  ov.innerHTML=h;document.body.appendChild(ov);
+  document.getElementById('jkSell').addEventListener('click',function(){
+    G.jk.forEach(function(jj){if(jj.ef&&jj.ef.t==='effect'&&jj.ef.sub==='scalingXMult'&&jj.id==='j105'){jj.dynX=(jj.dynX||1)+0.25;}});
+    if(j.id==='j77'){G.bossFn=null;toast('摔角手：Boss已禁用');}
+    if(j.id==='j94'){G.tags.push('tg_double');toast('健怡可乐：双倍标签');}
+    G.money+=sellPrice;G.jk.splice(idx,1);G.stats.jokersSold++;G.stats.moneyEarned+=sellPrice;
+    ov.remove();toast('卖出 '+j.n+' +$'+sellPrice);rr();saveGame();
+  });
+  document.getElementById('jkClose').addEventListener('click',function(){ov.remove();});
+}
+
+function rr(){
+  document.getElementById('bn').textContent='ANTE '+G.a+' · '+BN[G.r-1];
+  document.getElementById('bi').textContent='至少 '+G.tgt+' 分';
+  document.getElementById('st').textContent=G.tgt;
+  document.getElementById('rh').textContent=G.hl;
+  document.getElementById('rd').textContent=G.dl;
+  var rmEl=document.getElementById('rm');rmEl.textContent=G.money;rmEl.classList.remove('money-pop');void rmEl.offsetWidth;rmEl.classList.add('money-pop');
+  // 剩余牌数
+  var deckRemain=document.getElementById('deckRemain');
+  if(!deckRemain){deckRemain=document.createElement('span');deckRemain.id='deckRemain';deckRemain.className='res-d';deckRemain.style.cssText='margin-left:auto;';document.getElementById('res-row').appendChild(deckRemain);}
+  deckRemain.textContent='🂠'+G.dk.length;
+
+  if(G.sel.length>0){
+    var sc=G.sel.map(i=>G.hd[i]);
+    var ht=ev(sc);
+    var res=jfxSeq(sc,ht);
+    document.getElementById('sch').textContent=res.chips;
+    document.getElementById('smu').textContent=res.mult%1===0?res.mult:res.mult.toFixed(1);
+    document.getElementById('sto').textContent=res.total;
+    var lv=G.hLv[ht],lt=lv>0?' Lv.'+(lv+1):'';
+    document.getElementById('hand-badge').textContent=HZ[ht]+lt;
+    document.getElementById('hand-badge').classList.add('show');
+    // 分数预览
+    var pv=document.getElementById('preview-row');
+    pv.classList.add('show');
+    pv.querySelector('.pv-label').textContent=HZ[ht]+lt+' · '+res.chips+' × '+((res.mult%1===0)?res.mult:res.mult.toFixed(1));
+    pv.querySelector('.pv-score').textContent='≈ '+res.total+' 分';
+  }else{
+    document.getElementById('sch').textContent=G.sc;
+    document.getElementById('smu').textContent='';
+    document.getElementById('sto').textContent=G.sc+'/'+G.tgt;
+    document.getElementById('hand-badge').classList.remove('show');
+    document.getElementById('preview-row').classList.remove('show');
+  }
+  document.getElementById('sbf').style.width=Math.min(100,G.sc/G.tgt*100)+'%';
+  document.getElementById('sbt').textContent=G.sc+' / '+G.tgt;
+  var barEl=document.getElementById('sbf');barEl.classList.remove('score-bounce');void barEl.offsetWidth;barEl.classList.add('score-bounce');
+
+  // Joker column
+  var jc=document.getElementById('joker-col');jc.innerHTML='';
+  var show=Math.max(10,G.jk.length);
+  for(var i=0;i<show;i++){
+    if(i<G.jk.length){
+      var j=G.jk[i];var d=document.createElement('div');
+      var cls='joker-slot';
+      if(j.edition==='foil')cls+=' ed-foil';
+      else if(j.edition==='holographic')cls+=' ed-holographic';
+      else if(j.edition==='polychrome')cls+=' ed-polychrome';
+      else if(j.edition==='negative')cls+=' ed-negative';
+      d.className=cls;
+      d.setAttribute('draggable','true');d.dataset.idx=i;
+      var edTag='';
+      if(j.edition==='foil')edTag='<span style="color:#c49614;font-size:var(--u2)">🌟闪烁</span>';
+      else if(j.edition==='holographic')edTag='<span style="color:#5dade2;font-size:var(--u2)">✨全息</span>';
+      else if(j.edition==='polychrome')edTag='<span style="color:#e74c3c;font-size:var(--u2)">🌈多彩</span>';
+      else if(j.edition==='negative')edTag='<span style="color:#7f8c8d;font-size:var(--u2)">💀负片</span>';
+      d.innerHTML='<span class="jk-num">#'+(i+1)+'</span>'+edTag+'<span class="jk-emoji">'+j.em+'</span><span class="jk-name">'+j.n+'</span><span class="jk-desc">'+jDynDesc(j)+'</span>';
+      d.addEventListener('dragstart',function(idx,ev){G.dragIdx=idx;ev.dataTransfer.effectAllowed='move';this.classList.add('dragging');}.bind(null,i));
+      d.addEventListener('dragend',function(){this.classList.remove('dragging');G.dragIdx=-1;rr();}.bind(d));
+      d.addEventListener('dragover',function(ev){ev.preventDefault();ev.dataTransfer.dropEffect='move';this.classList.add('drag-over');}.bind(d));
+      d.addEventListener('dragleave',function(){this.classList.remove('drag-over');}.bind(d));
+      d.addEventListener('drop',function(idx,ev){
+        ev.preventDefault();this.classList.remove('drag-over');
+        if(G.dragIdx>=0&&G.dragIdx!==idx){var j=G.jk[G.dragIdx];G.jk.splice(G.dragIdx,1);G.jk.splice(idx,0,j);toast('小丑顺序已调整');}
+        G.dragIdx=-1;rr();
+      }.bind(null,i));
+      // 单击查看小丑详情
+      d.addEventListener('click',function(idx){return function(ev){
+        if(ev.detail===1){showJokerDetail(idx);}
+      };}(i));
+      // 双击卖出小丑
+      d.addEventListener('dblclick',function(idx){return function(){
+        var j=G.jk[idx];
+        var sellPrice=3; // 基础卖出价$3
+        if(j.edition==='foil')sellPrice+=2;
+        else if(j.edition==='holographic')sellPrice+=4;
+        else if(j.edition==='polychrome')sellPrice+=8;
+        else if(j.edition==='negative')sellPrice+=5;
+        // 蛋小丑额外加价
+        if(j.id==='j46')sellPrice+=3;
+        // 篝火触发：卖牌×0.25累积
+        G.jk.forEach(function(jj){if(jj.ef&&jj.ef.t==='effect'&&jj.ef.sub==='scalingXMult'&&jj.id==='j105'){jj.dynX=(jj.dynX||1)+0.25;}});
+        // 摔角手：卖出时禁用Boss
+        if(j.id==='j77'){G.bossFn=null;toast('摔角手：Boss效果已禁用');}
+        // 健怡可乐：卖出时创建双倍标签
+        if(j.id==='j94'){G.tags.push('tg_double');toast('健怡可乐：获得双倍标签');}
+        // 礼品卡：卖出时额外+$1
+        if(j.id==='j79')sellPrice+=1;
+        G.money+=sellPrice;G.jk.splice(idx,1);G.stats.jokersSold++;G.stats.moneyEarned+=sellPrice;
+        toast('卖出 '+j.n+' +$'+sellPrice);rr();saveGame();
+      };}(i));
+      jc.appendChild(d);
+    }else{var d=document.createElement('div');d.className='joker-empty';d.textContent='EMPTY';jc.appendChild(d);}
+  }
+
+  var cr=document.getElementById('cards-row');cr.innerHTML='';
+  var enhLabel={'lucky':'🍀','mult':'×','bonus':'$','wild':'🌈','steel':'🛡','glass':'💎','gold':'🪙','stone':'🪨'};
+  G.hd.forEach((c,i)=>{
+    var d=document.createElement('div');
+    var cls='card '+ (SR[c.suit]?'red':'black')+(G.sel.includes(i)?' sel':'');
+    if(c.enh)cls+=' enh-'+c.enh;
+    d.className=cls;
+    var enhTag=c.enh&&enhLabel[c.enh]?'<span style="position:absolute;top:2px;left:2px;font-size:var(--u3);opacity:0.7">'+enhLabel[c.enh]+'</span>':'';
+    var sealIcon=c.seal?{red:'🔴',purple:'🟣',gold:'🟡',blue:'🔵'}[c.seal]:'';
+    var sealTag=sealIcon?'<span style="position:absolute;bottom:2px;right:2px;font-size:var(--u3)">'+sealIcon+'</span>':'';
+    d.innerHTML=enhTag+sealTag+'<span class="cr"><span class="r">'+c.rank+'</span><span class="cr-s">'+c.suit+'</span></span><span class="s-center">'+c.suit+'</span><span class="br"><span class="r">'+c.rank+'</span><span class="br-s">'+c.suit+'</span></span>';
+    d.addEventListener('click',function(idx){return function(){ts(idx);};}(i));
+    if(G._dealAnim)d.style.animation='dealSlide '+(0.15+i*0.02)+'s ease-out both';
+    cr.appendChild(d);
+  });
+  document.getElementById('bp').disabled=G.sel.length===0||G.hl===0||anim;
+  document.getElementById('bd').disabled=G.sel.length===0||G.dl===0||anim;
+
+  // 消耗品槽
+  var consRow=document.getElementById('cons-row');consRow.innerHTML='';
+  for(var i=0;i<G.consMax;i++){
+    var d=document.createElement('div');
+    if(i<G.cons.length){
+      var c=G.cons[i];
+      d.className='cons-slot filled cons-slot-'+c.type;
+      d.innerHTML='<span class="cons-e">'+c.em+'</span><span class="cons-n">'+c.n+'</span>';
+      d.addEventListener('click',function(idx){return function(){useCons(idx);};}(i));
+    }else{
+      d.className='cons-slot empty';
+      d.innerHTML='<span style="color:rgba(125,60,152,0.15);font-size:var(--u2)">空</span>';
+    }
+    consRow.appendChild(d);
+  }
+
+  // 效果栏
+  rrEffects();
+  G._dealAnim=false;
+}
+
+function rrEffects(){
+  var el=document.getElementById('ef-list');if(!el)return;
+  var html='';
+  // 小丑效果
+  if(G.jk.length>0){
+    html+='<div class="ef-item"><div class="ef-item-cat">🃏 小丑牌</div>';
+    for(var i=0;i<G.jk.length;i++){
+      var j=G.jk[i];
+      var edLabel=j.edition&&j.edition!=='none'?' '+({foil:'🌟闪烁',holographic:'✨全息',polychrome:'🌈多彩',negative:'💀负片'}[j.edition])+'':'';
+      html+='<div class="ef-item-line">#'+(i+1)+' '+j.em+' '+j.n+edLabel+'<br>'+jDynDesc(j)+'</div>';
+    }
+    html+='</div>';
+  }
+  // 牌型等级
+  var lvls='';
+  for(var k in G.hLv){if(G.hLv[k]>0){lvls+='<div class="ef-item-line">'+HZ[k]+' Lv.'+(G.hLv[k]+1)+' ('+hc(k,G.hLv[k])+'筹码/'+hm(k,G.hLv[k])+'乘数)</div>';}}
+  if(lvls){html+='<div class="ef-item"><div class="ef-item-cat">🌍 牌型等级</div>'+lvls+'</div>';}
+  // 消耗品
+  if(G.cons.length>0){
+    html+='<div class="ef-item"><div class="ef-item-cat">🔮 消耗品</div>';
+    for(var i=0;i<G.cons.length;i++){var c=G.cons[i];html+='<div class="ef-item-line">'+c.em+' '+c.n+'<br>'+c.d+'</div>';}
+    html+='</div>';
+  }
+  // 手牌增强
+  var enhCards=[];
+  G.hd.forEach(function(c){if(c.enh)enhCards.push(c);});
+  if(enhCards.length>0){
+    var enhNames={lucky:'幸运牌',mult:'乘数牌',bonus:'奖励牌',wild:'万能牌',steel:'钢铁牌',glass:'玻璃牌',gold:'黄金牌',stone:'石头牌'};
+    var enhEffs={lucky:'随机+20乘数或+$4',mult:'+4乘数',bonus:'+30筹码',wild:'可替代任何花色',steel:'+1.5×乘数(手中)',glass:'×2乘数(打出)',gold:'回合末+$3',stone:'+50筹码(无面值)'};
+    html+='<div class="ef-item"><div class="ef-item-cat">✨ 牌面增强</div>';
+    var enhCount={};
+    enhCards.forEach(function(c){var t=c.enh;enhCount[t]=(enhCount[t]||0)+1;});
+    for(var t in enhCount){html+='<div class="ef-item-line">'+enhCount[t]+'张'+enhNames[t]+' — '+enhEffs[t]+'</div>';}
+    html+='</div>';
+  }
+  // 如果没有任何效果
+  if(!html)html='<div style="text-align:center;color:rgba(125,60,152,0.3);font-size:var(--u2)">暂无生效效果</div>';
+  el.innerHTML=html;
+}
+
+function useCons(idx){
+  if(idx>=G.cons.length||anim)return;
+  SND.consume();
+  var c=G.cons[idx];
+  if(c.type==='planet'){
+    G.hLv[c.data.h]++;
+    toast(HZ[c.data.h]+'升至Lv.'+(G.hLv[c.data.h]+1));
+    G.cons.splice(idx,1);G.stats.planetsUsed++;G.lastUsedConsumable=c.data;
+  }else if(c.type==='tarot'){
+    at2Select(c.data);
+    G.cons.splice(idx,1);G.stats.tarotsUsed++;G.lastUsedConsumable=c.data;
+  }else if(c.type==='spectral'){
+    useSpectral(c.data);
+    G.cons.splice(idx,1);G.stats.spectralUsed++;G.lastUsedConsumable=c.data;
+  }
+  rr();rrCons();saveGame();
+}
+
+function useSpectral(s){
+  var id=s.id;
+  if(id==='s_familiar'){ri2(1);for(var i=0;i<3;i++){if(G.cons.length<G.consMax){var tp=[...TP];sf(tp);G.cons.push({type:'tarot',em:tp[i].em,n:tp[i].n,data:tp[i],d:tp[i].d});}}toast('眷属:销毁1张+3张塔罗');}
+  else if(id==='s_grim'){ri2(1);for(var i=0;i<2;i++){if(G.cons.length<G.consMax){var pp=[...PP];sf(pp);G.cons.push({type:'planet',em:pp[i].em,n:pp[i].n,data:pp[i],d:pp[i].d});}}toast('死神:销毁1张+2张星球');}
+  else if(id==='s_incantation'){ri2(1);var idx=ri(4);idx.forEach(function(i){G.hd[i].suit=S[Math.floor(Math.random()*4)];});toast('咒语:4张变随机花色');}
+  else if(id==='s_talisman'){ri2(1);var idx=ri(1);idx.forEach(function(i){G.hd[i].enh='gold';});toast('护符:1张变黄金牌');}
+  else if(id==='s_aura'){ri2(1);var idx=ri(1);idx.forEach(function(i){G.hd[i].enh='wild';});toast('光环:1张变万能牌');}
+  else if(id==='s_wraith'){ri2(1);var jp=JP.filter(function(j){return !G.jk.find(function(jj){return jj.id===j.id});});sf(jp);if(jp.length>0){G.jk.push(jp[0]);toast('幽灵:获得'+jp[0].n);}else{toast('幽灵:没有可用小丑');}}
+  else if(id==='s_sigil'){ri2(1);var idx=ri(1);idx.forEach(function(i){G.hd[i].enh='stone';});toast('印记:1张变石头牌');}
+  else if(id==='s_ouija'){ri2(1);var jp=JP.filter(function(j){return j.r==='u'||j.r==='r'&&j.r!=='l';});sf(jp);if(jp.length>0){G.jk.push(jp[0]);toast('灵板:获得'+jp[0].n+',手牌上限-1');}}
+  else if(id==='s_eclypse'){ri2(1);G.roundBonusChips+=100;toast('蚀:下次+100筹码');}
+  else if(id==='s_medium'){ri2(1);if(G.cons.length<G.consMax){var sp=[...SP];sf(sp);G.cons.push({type:'spectral',em:sp[0].em,n:sp[0].n,data:sp[0],d:sp[0].d});toast('灵媒:获得'+sp[0].n);}else{toast('消耗槽已满');}}
+  else if(id==='s_cryptid'){ri2(1);var jp=JP.filter(function(j){return !G.jk.find(function(jj){return jj.id===j.id});});sf(jp);for(var i=0;i<Math.min(2,jp.length);i++){G.jk.push(jp[i]);}toast('未知生物:获得'+jp.length+'个小丑');}
+}
+
+function ri2(n){if(G.hd.length>0){var idx=Math.floor(Math.random()*G.hd.length);G.hd.splice(idx,1);toast('销毁1张手牌');}}
+function rrCons(){
+  var consRow=document.getElementById('cons-row');if(!consRow)return;
+  consRow.innerHTML='';
+  for(var i=0;i<2;i++){
+    var d=document.createElement('div');
+    if(i<G.cons.length){
+      var c=G.cons[i];
+      d.className='cons-slot filled cons-slot-'+c.type;
+      d.innerHTML='<span class="cons-e">'+c.em+'</span><span class="cons-n">'+c.n+'</span>';
+      d.addEventListener('click',function(idx){return function(){useCons(idx);};}(i));
+    }else{
+      d.className='cons-slot empty';
+      d.innerHTML='<span style="color:rgba(125,60,152,0.15);font-size:var(--u2)">空</span>';
+    }
+    consRow.appendChild(d);
+  }
+}
+
+function ts(i){if(anim||G.ph!=='play')return;var idx=G.sel.indexOf(i);if(idx>=0){G.sel.splice(idx,1);SND.cardDesel();}else if(G.sel.length>=5)return;else{G.sel.push(i);SND.cardSel();}rr();}
+
+function sortBySuit(){
+  G.hd.sort((a,b)=>{var si=S.indexOf(a.suit)-S.indexOf(b.suit);return si!==0?si:V[a.rank]-V[b.rank];});
+  G.sel=[];rr();toast('按花色排序');
+}
+function sortByRank(){
+  G.hd.sort((a,b)=>V[b.rank]-V[a.rank]||(S.indexOf(a.suit)-S.indexOf(b.suit)));
+  G.sel=[];rr();toast('按面值排序');
+}
+
+function ph(){
+  if(G.sel.length===0||G.hl===0||anim)return;
+  SND.playHand();
+  var sc=G.sel.map(function(i){return G.hd[i];});
+  var ht=ev(sc);
+  // Boss眼睛：不能重复打出同一牌型
+  if(G.bossFn==='eye'&&G.bossPlayedTypes&&G.bossPlayedTypes.indexOf(ht)>=0){toast('👁 眼睛：不能重复打 '+HZ[ht]+'!');anim=false;return;}
+  if(G.bossPlayedTypes)G.bossPlayedTypes.push(ht);
+  anim=true;G.hl--;G.stats.handsPlayed++;
+  var res=jfxSeq(sc,ht);
+
+  var ov=document.createElement('div');ov.className='ov';
+  var lv=G.hLv[ht],lt=lv>0?' Lv.'+(lv+1):'';
+  var baseC=hc(ht,lv),baseM=hm(ht,lv);
+  var ch='';
+  for(var i=0;i<sc.length;i++)ch+='<div class="sc-ov-card '+ (SR[sc[i].suit]?'red':'black')+'"><span class="r">'+sc[i].rank+'</span><span class="s">'+sc[i].suit+'</span></div>';
+  ov.innerHTML='<div class="sc-ov-title">'+HZ[ht]+lt+'</div><div class="sc-ov-cards">'+ch+'</div><div class="sc-ov-nums"><span class="sc-ov-chip" id="soCh">'+baseC+'</span><span class="sc-ov-eq">×</span><span class="sc-ov-mult" id="soMu">'+baseM+'</span><span class="sc-ov-eq">=</span><span class="sc-ov-tot" id="soTo">'+Math.round(baseC*baseM)+'</span></div><div class="sc-ov-jk" id="soJk"></div>';
+  document.body.appendChild(ov);
+
+  var scC=ov.querySelectorAll('.sc-ov-card');
+  var curC=baseC,ci=0;
+  setTimeout(function(){scN();},250);
+
+  function scN(){
+    if(ci>=sc.length){shJ();return;}
+    scC[ci].classList.add('on');curC+=V[sc[ci].rank];
+    SND.play('triangle',300+V[sc[ci].rank]*30,0.04,0.04);
+    document.getElementById('soCh').textContent=curC;document.getElementById('soCh').classList.add('pop');
+    document.getElementById('soTo').textContent=Math.round(curC*baseM);
+    setTimeout(function(){document.getElementById('soCh').classList.remove('pop');scC[ci].classList.remove('on');ci++;setTimeout(scN,120);},180);
+  }
+
+  function shJ(){
+    var jh='';
+    res.steps.forEach(function(step){
+      var j=step.joker,txt=jfxDesc(j,sc,ht);
+      var edLabel='';
+      if(step.type==='chips_edition')edLabel=' [闪烁+50筹码]';
+      else if(step.type==='xmult_edition'){
+        if(j.edition==='holographic')edLabel=' [全息×1.5]';
+        else if(j.edition==='polychrome')edLabel=' [多彩×3]';
+      }
+      jh+='<div class="jl '+step.type+'">#'+(G.jk.indexOf(j)+1)+' '+j.em+' '+j.n+': '+txt+edLabel+'</div>';
+    });
+    document.getElementById('soJk').innerHTML=jh;
+    var lines=ov.querySelectorAll('.jl');var li=0;
+    if(!lines.length){fin();return;}
+    function nxt(){
+      if(li>=lines.length){fin();return;}
+      lines[li].classList.add('on');
+      var sC=res.steps[li].chips,sM=res.steps[li].mult;
+      document.getElementById('soCh').textContent=sC;
+      document.getElementById('soMu').textContent=sM%1===0?sM:sM.toFixed(1);
+      if(res.steps[li].type==='xmult')document.getElementById('soMu').classList.add('pop');
+      document.getElementById('soTo').textContent=res.steps[li].total;
+      SND.joker();
+      li++;setTimeout(nxt,200);
+    }
+    nxt();
+  }
+
+  function fin(){
+    document.getElementById('soTo').textContent=res.total;document.getElementById('soTo').classList.add('pop');
+    setTimeout(function(){document.getElementById('soTo').classList.remove('pop');
+      if(res.total>=200){document.getElementById('game-wrap').classList.add('shk');setTimeout(function(){document.getElementById('game-wrap').classList.remove('shk');aft(res.total);},300);}
+      else aft(res.total);
+    },400);
+  }
+
+  function aft(fs){
+    G.sc+=fs;G.hd=G.hd.filter(function(_,i){return !G.sel.includes(i);});
+    // 牌型计数(supernova用)
+    if(!G.handCounts)G.handCounts={};
+    G.handCounts[ht]=(G.handCounts[ht]||0)+1;
+    // scaling 类小丑增长
+    G.jk.forEach(function(j){
+      if(j.ef&&j.ef.t==='effect'){
+        if(j.ef.sub==='scalingMult'){
+          if(j.id==='j44'&&!sc.some(function(c){var r=c.rank;return r==='J'||r==='Q'||r==='K'||r==='A';})){j.dyn=(j.dyn||0)+1;}
+          else if(j.id==='j58'){j.dyn=(j.dyn||0)+1;}
+          else if(j.id==='j98'&&ht==='Two Pair'){j.dyn=(j.dyn||0)+2;}
+        }
+        else if(j.ef.sub==='scalingChips'){
+          if(j.id==='j49'&&ht==='Straight'){j.dyn=(j.dyn||0)+15;}
+          else if(j.id==='j65'&&sc.length===4){j.dyn=(j.dyn||0)+4;}
+        }
+        else if(j.ef.sub==='scalingXMult'){
+          if(j.id==='j55'){j.dynX=(j.dynX||1)+0.1;}
+          else if(j.id==='j68'&&sc.some(function(c){return c.enh;})){j.dynX=(j.dynX||1)+0.1;}
+          else if(j.id==='j70'){j.dynX=(j.dynX||1)+0.25;}
+          else if(j.id==='j105'){j.dynX=(j.dynX||1)+0.25;}
+        }
+        else if(j.ef.sub==='loyaltyCard'){j.dyn=(j.dyn||0)+1;}
+        // decay: 冰淇淋出牌时衰减
+        else if(j.ef.sub==='decayChips'){j.dyn=(j.dyn||100)-5;if(j.dyn<=0)j.dyn=0;}
+      }
+    });
+    // 移除已衰减到0的小丑
+    G.jk=G.jk.filter(function(j){return !(j.ef&&j.ef.t==='effect'&&j.ef.sub==='decayChips'&&j.dyn<=0);});
+    G.sel=[];ov.remove();
+    if(G.sc>=G.tgt){anim=false;wr();return;}
+    if(G.hl===0){anim=false;lr();return;}
+    // Boss蛇：补牌到3而非8
+    if(G.bossFn==='serpent'){while(G.hd.length<3){if(!G.dk.length){bd();sf(G.dk);}G.hd.push(G.dk.shift());}toast('🐍 蛇:补牌至3张');}
+    else{d8();}
+    rf();anim=false;rr();
+  }
+}
+
+function dc(){
+  if(G.sel.length===0||G.dl===0||anim)return;
+  SND.discard();
+  anim=true;G.dl--;G.stats.discardsUsed++;
+  var els=document.querySelectorAll('.card.sel');for(var i=0;i<els.length;i++)els[i].classList.add('fly');
+  setTimeout(function(){G.hd=G.hd.filter(function(_,i){return !G.sel.includes(i);});G.sel=[];rf();anim=false;rr();saveGame();},300);
+}
+
+function wr(){
+  G.stats.roundsPlayed++;G.stats.highestScore=Math.max(G.stats.highestScore,G.sc);
+  var interestCap=5;G.vouchers.forEach(function(v){if(v==='v_interest'||v==='v_ante')interestCap+=1;if(v==='v_investment'&&G.tags.indexOf('tg_investment')>=0)interestCap+=25;});
+  var i=Math.min(interestCap,Math.floor(G.money/5));
+  var hustle=G.vouchers.indexOf('v_hustle')>=0?2:0;
+  G.money+=3+G.a+i+hustle;G.stats.moneyEarned+=3+G.a+i+hustle;
+  SND.money();
+  toast('+$'+(3+G.a+hustle)+' +$'+i+'利息');G.ph='shop';G.rr=2+G.vouchers.filter(function(v){return v==='v_reroll';}).length;shs();saveGame();
+}
+function lr(){G.ph='result';shr(false);clearSave();}
+
+function shs(){gs();var ov=document.createElement('div');ov.className='ov';ov.id='shov';document.body.appendChild(ov);rsh();}
+function rsh(){
+  var ov=document.getElementById('shov');if(!ov)return;
+  function renderItem(idx){
+    var it=G.shop[idx],cls='shop-it shop-it-'+it.type;
+    if(it.type==='pack')cls='shop-it shop-it-pack';
+    else if(it.type==='voucher')cls='shop-it shop-it-voucher';
+    if(it.sold)cls+=' sold';else if(G.money<it.price)cls+=' nom';
+    return '<div class="'+cls+'" data-i="'+idx+'"><div class="si-e">'+it.em+'</div><div class="si-n">'+it.n+'</div><div class="si-d">'+it.d+'</div><div class="si-p">$'+it.price+'</div></div>';
+  }
+
+  // 分类
+  var groups={};
+  var typeLabels={joker:'🃏 小丑牌',planet:'🌍 星球牌',tarot:'🔮 塔罗牌',pack:'🎁 强化包',voucher:'📜 凭证'};
+  var typeColors={joker:'var(--gold)',planet:'#5dade2',tarot:'var(--purple)',pack:'#e67e22',voucher:'#27ae60'};
+  for(var i=0;i<G.shop.length;i++){
+    var it=G.shop[i];
+    if(!groups[it.type])groups[it.type]=[];
+    groups[it.type].push(i);
+  }
+
+  var h='<div class="shop-t">💰 $'+G.money+'</div>';
+  // 两两分组：小丑+星球，塔罗+包，凭证单独
+  var pairs=[['joker','planet'],['tarot','pack'],['voucher',null]];
+  for(var p=0;p<pairs.length;p++){
+    var t1=pairs[p][0],t2=pairs[p][1];
+    var hasT1=groups[t1]&&groups[t1].length>0;
+    var hasT2=t2&&groups[t2]&&groups[t2].length>0;
+    if(!hasT1&&(!t2||!hasT2))continue;
+    h+='<div style="display:flex;gap:var(--u4);margin-bottom:var(--u2)">';
+    if(hasT1){
+      h+='<div style="flex:1;min-width:0">';
+      h+='<div class="shop-row-label"><span class="shop-row-label-dot" style="background:'+typeColors[t1]+'"></span>'+typeLabels[t1]+'</div>';
+      h+='<div class="shop-scroll">';
+      for(var i=0;i<groups[t1].length;i++)h+=renderItem(groups[t1][i]);
+      h+='</div></div>';
+    }
+    if(t2&&hasT2){
+      h+='<div style="flex:1;min-width:0">';
+      h+='<div class="shop-row-label"><span class="shop-row-label-dot" style="background:'+typeColors[t2]+'"></span>'+typeLabels[t2]+'</div>';
+      h+='<div class="shop-scroll">';
+      for(var i=0;i<groups[t2].length;i++)h+=renderItem(groups[t2][i]);
+      h+='</div></div>';
+    }
+    h+='</div>';
+  }
+  h+='<div class="shop-btns"><button class="sb sb-r" id="brr"'+(G.rr<=0||G.money<G.rc?' disabled':'')+'>🔄 $'+G.rc+' ('+G.rr+'次)</button><button class="sb sb-c" id="bnc">▶ 继续</button></div>';
+  ov.innerHTML=h;
+  var cards=ov.querySelectorAll('.shop-it');for(var i=0;i<cards.length;i++)cards[i].addEventListener('click',function(idx){return function(){bi(idx);};}(parseInt(cards[i].dataset.i)));
+  document.getElementById('brr').addEventListener('click',rsh2);
+  document.getElementById('bnc').addEventListener('click',csh);
+}
+
+function gs(){
+  G.shop=[];
+  function rollEdition(){
+    var r=Math.random()*100;
+    if(r<0.3)return 'negative';if(r<0.6)return 'polychrome';if(r<5)return 'holographic';if(r<14)return 'foil';return 'none';
+  }
+  var edNames={none:'',foil:'闪烁',holographic:'全息',polychrome:'多彩',negative:'负片'};
+  var edIcons={none:'',foil:'🌟',holographic:'✨',polychrome:'🌈',negative:'💀'};
+  var edDescs={none:'',foil:'+50筹码',holographic:'×1.5乘数',polychrome:'×3乘数',negative:'不占槽位'};
+  var basePrice=3+G.a;
+  // 凭证折扣
+  var hasClearance=G.vouchers.indexOf('v_clearance')>=0;
+  var hasMerchant=G.vouchers.indexOf('v_merchant')>=0;
+  var discount=hasClearance?0.5:1;
+  if(hasMerchant)basePrice=Math.max(1,basePrice-2);
+  // 过剩凭证：商店物品+1
+  var overstockCount=G.vouchers.filter(function(v){return v==='v_overstock';}).length;
+  // 重滚凭证
+  var rerollCount=G.vouchers.filter(function(v){return v==='v_reroll';}).length;
+  G.rr=2+rerollCount;G.rc=Math.round((5+G.a)*discount);
+  // 标签经济：商店价格-$2
+  var hasEconTag=G.tags.indexOf('tg_economy')>=0;
+
+  // Jokers: 2+overstock from pool
+  var jp=JP.filter(function(j){return !G.jk.find(function(jj){return jj.id===j.id})&&j.r!=='l';});
+  sf(jp);var jc=Math.min(2+overstockCount,jp.length);
+  for(var i=0;i<jc;i++){
+    var j=jp[i],p=Math.round((j.r==='c'?3+Math.floor(Math.random()*3):j.r==='u'?5+Math.floor(Math.random()*4):8)*discount);
+    if(hasEconTag)p=Math.max(1,p-2);
+    var ed=rollEdition();
+    if(ed==='foil')p+=2;if(ed==='holographic')p+=4;if(ed==='polychrome')p+=8;if(ed==='negative')p+=5;
+    var edSuffix=ed==='none'?'':edIcons[ed]+' '+edNames[ed]+'('+edDescs[ed]+')';
+    G.shop.push({type:'joker',em:j.em,n:j.n,d:j.d+(edSuffix?' · '+edSuffix:''),price:p,data:j,sold:false,edition:ed});
+  }
+  // 强化包系统：1-2个包
+  var packTypes=[
+    {type:'pack',packType:'buffoon',em:'🃏',n:'小丑包',d:'开包获得2个随机小丑选择1个',price:Math.round(4*discount)},
+    {type:'pack',packType:'arcana',em:'🔮',n:'塔罗包',d:'开包获得2-3张塔罗牌选择1张',price:Math.round(4*discount)},
+    {type:'pack',packType:'celestial',em:'🌍',n:'星球包',d:'开包获得2-3张星球牌选择1张',price:Math.round(4*discount)},
+    {type:'pack',packType:'spectral',em:'👻',n:'幽灵包',d:'开包获得1-2张幽灵牌选择1张',price:Math.round(6*discount)},
+  ];
+  sf(packTypes);var packCount=Math.min(1+(G.a>2?1:0),packTypes.length);
+  for(var i=0;i<packCount;i++){
+    var pt=packTypes[i];
+    if(hasEconTag)pt.price=Math.max(1,pt.price-2);
+    G.shop.push({type:'pack',em:pt.em,n:pt.n,d:pt.d,price:pt.price,sold:false,packType:pt.packType});
+  }
+  // Planets: 1
+  var pp=[...PP];sf(pp);var pc=Math.min(1,pp.length);
+  for(var i=0;i<pc;i++){
+    var p=pp[i],pr=Math.round((3+G.a)*discount);
+    var hasHone=G.vouchers.indexOf('v_hone')>=0;if(hasHone)pr=Math.max(1,pr-1);
+    if(hasEconTag)pr=Math.max(1,pr-2);
+    var lv=G.hLv[p.h]+1;
+    G.shop.push({type:'planet',em:p.em,n:p.n,d:HZ[p.h]+' Lv.'+(lv+1)+'(+'+p.lvChips+'筹码/+'+p.lvMult+'乘数)',price:pr,data:p,sold:false});
+  }
+  // Tarots: 1
+  var tp=[...TP];sf(tp);var tc=Math.min(1,tp.length);
+  for(var i=0;i<tc;i++){
+    var t=tp[i],pr=Math.round((3+G.a)*discount);
+    if(hasEconTag)pr=Math.max(1,pr-2);
+    G.shop.push({type:'tarot',em:t.em,n:t.n,d:t.d,price:pr,data:t,sold:false});
+  }
+  // 凭证：1-2个(每2轮出现一次)
+  if(G.stats.roundsPlayed%2===0||G.a>=2){
+    var vp=[...VC].filter(function(v){return G.vouchers.indexOf(v.id)<0||v.stackable;});
+    sf(vp);var vCount=Math.min(1+(G.a>3?1:0),vp.length);
+    for(var i=0;i<vCount;i++){
+      var v=vp[i],vpr=Math.round(v.cost*discount);
+      if(hasEconTag)vpr=Math.max(1,vpr-2);
+      G.shop.push({type:'voucher',em:v.em,n:v.n,d:v.d+(v.stackable?' (可叠加)':' (不可叠加)'),price:vpr,data:v,sold:false});
+    }
+  }
+  // 清除经济标签(一次性)
+  if(hasEconTag){var idx=G.tags.indexOf('tg_economy');if(idx>=0)G.tags.splice(idx,1);}
+}
+
+function bi(idx){
+  var it=G.shop[idx];if(it.sold||G.money<it.price)return;
+  SND.buy();
+  G.money-=it.price;it.sold=true;G.stats.moneyEarned+=it.price;
+  if(it.type==='joker'){
+    var jObj=Object.assign({},it.data);jObj.edition=it.edition||'none';
+    G.jk.push(jObj);G.stats.jokersBought++;
+    var edMsg=jObj.edition==='none'?'':({foil:' 闪烁版',holographic:' 全息版',polychrome:' 多彩版',negative:' 负片版'}[jObj.edition]);
+    toast('获得 '+it.n+edMsg);
+  }
+  else if(it.type==='planet'){if(G.cons.length<G.consMax){G.cons.push({type:'planet',em:it.em,n:it.n,data:it.data,d:it.d});toast(it.n+' 放入消耗槽');}else{toast('消耗槽已满('+G.consMax+')');return;}}
+  else if(it.type==='tarot'){if(G.cons.length<G.consMax){G.cons.push({type:'tarot',em:it.em,n:it.n,data:it.data,d:it.d});toast(it.n+' 放入消耗槽');}else{toast('消耗槽已满('+G.consMax+')');return;}}
+  else if(it.type==='voucher'){
+    G.vouchers.push(it.data.id);
+    if(it.data.id==='v_clearance'||it.data.id==='v_merchant')toast(it.n+': 价格折扣已生效');
+    else if(it.data.id==='v_reroll')toast(it.n+': 重滚次数+1');
+    else if(it.data.id==='v_overstock')toast(it.n+': 下次商店物品+1');
+    else if(it.data.id==='v_tarot'||it.data.id==='v_planet'){G.consMax++;toast(it.n+': 消耗槽位+1→'+G.consMax);}
+    else if(it.data.id==='v_hone')toast(it.n+': 星球牌售价-$1');
+    else if(it.data.id==='v_interest'||it.data.id==='v_ante')toast(it.n+': 利息上限+1');
+    else if(it.data.id==='v_hustle')toast(it.n+': 每轮+$2');
+    else toast(it.n+' 已激活');
+  }
+  else if(it.type==='pack'){openPack(it.packType);return;}
+  rsh();rrCons();saveGame();
+}
+
+function openPack(packType){
+  SND.pack();
+  G.stats.packsOpened++;
+  var items=[];
+  if(packType==='buffoon'){
+    var jp=JP.filter(function(j){return !G.jk.find(function(jj){return jj.id===j.id})&&j.r!=='l';});
+    sf(jp);for(var i=0;i<Math.min(2,jp.length);i++){items.push({type:'joker',em:jp[i].em,n:jp[i].n,d:jp[i].d,data:jp[i]});}
+  }else if(packType==='arcana'){
+    var tp=[...TP];sf(tp);for(var i=0;i<Math.min(3,tp.length);i++){items.push({type:'tarot',em:tp[i].em,n:tp[i].n,d:tp[i].d,data:tp[i]});}
+  }else if(packType==='celestial'){
+    var pp=[...PP];sf(pp);for(var i=0;i<Math.min(3,pp.length);i++){var lv=G.hLv[pp[i].h]+1;items.push({type:'planet',em:pp[i].em,n:pp[i].n,d:HZ[pp[i].h]+' Lv.'+(lv+1)+'(+'+pp[i].lvChips+'筹码/+'+pp[i].lvMult+'乘数)',data:pp[i]});}
+  }else if(packType==='spectral'){
+    var sp=[...SP];sf(sp);for(var i=0;i<Math.min(2,sp.length);i++){items.push({type:'spectral',em:sp[i].em,n:sp[i].n,d:sp[i].d,data:sp[i]});}
+  }
+  if(items.length===0){toast('包内没有可用物品');rsh();return;}
+  var ov=document.createElement('div');ov.className='ov';ov.id='packOv';
+  var h='<div style="font-size:var(--u5);color:var(--gold);font-weight:bold;margin-bottom:var(--u4)">🎁 选择1个物品</div>';
+  h+='<div style="display:flex;gap:var(--u4);flex-wrap:wrap;justify-content:center">';
+  items.forEach(function(item,i){
+    h+='<div class="shop-it shop-it-'+item.type+'" data-pi="'+i+'" style="cursor:pointer"><div class="si-e">'+item.em+'</div><div class="si-n">'+item.n+'</div><div class="si-d">'+item.d+'</div></div>';
+  });
+  h+='</div>';
+  h+='<button class="sb sb-r" id="packSkip" style="margin-top:var(--u4)">跳过</button>';
+  ov.innerHTML=h;document.body.appendChild(ov);
+  var cards=ov.querySelectorAll('.shop-it[data-pi]');
+  for(var i=0;i<cards.length;i++){
+    cards[i].addEventListener('click',function(pi){return function(){
+      var item=items[pi];
+      if(item.type==='joker'){G.jk.push(Object.assign({},item.data));toast('获得 '+item.n);G.stats.jokersBought++;}
+      else if(item.type==='tarot'){if(G.cons.length<G.consMax){G.cons.push({type:'tarot',em:item.em,n:item.n,data:item.data,d:item.d});toast(item.n+' 放入消耗槽');}else{toast('消耗槽已满');}}
+      else if(item.type==='planet'){if(G.cons.length<G.consMax){G.cons.push({type:'planet',em:item.em,n:item.n,data:item.data,d:item.d});toast(item.n+' 放入消耗槽');}else{toast('消耗槽已满');}}
+      else if(item.type==='spectral'){if(G.cons.length<G.consMax){G.cons.push({type:'spectral',em:item.em,n:item.n,data:item.data,d:item.d});toast(item.n+' 放入消耗槽');}else{toast('消耗槽已满');}}
+      ov.remove();rsh();rrCons();saveGame();
+    };}(i));
+  }
+  document.getElementById('packSkip').addEventListener('click',function(){ov.remove();rsh();});
+}
+
+// 消耗品选牌交互：需要选牌的塔罗牌先弹overlay让玩家点选
+function at2Select(t){
+  var id=t.id;
+  // 判断哪些塔罗牌需要选牌
+  var needsSelect={
+    t_magician:{n:2,label:'选择2张牌变幸运牌'},
+    t_empress:{n:2,label:'选择2张牌变乘数牌'},
+    t_hierophant:{n:2,label:'选择2张牌变奖励牌'},
+    t_lovers:{n:1,label:'选择1张牌变万能牌'},
+    t_chariot:{n:1,label:'选择1张牌变钢铁牌'},
+    t_justice:{n:1,label:'选择1张牌变玻璃牌'},
+    t_devil:{n:1,label:'选择1张牌变黄金牌'},
+    t_tower:{n:1,label:'选择1张牌变石头牌'},
+    t_star:{n:3,label:'选择3张牌变♦'},
+    t_moon:{n:3,label:'选择3张牌变♣'},
+    t_sun:{n:3,label:'选择3张牌变♥'},
+    t_world:{n:3,label:'选择3张牌变♠'},
+    t_strength:{n:2,label:'选择2张牌面值+1'},
+    t_hanged:{n:2,label:'选择最多2张牌销毁'},
+    t_death:{n:2,label:'选择2张牌(左复制右属性)'},
+  };
+  if(!needsSelect[id]){at2(t);return;}
+  var info=needsSelect[id];
+  var selCards=[];
+  var ov=document.createElement('div');ov.className='ov';ov.id='selOv';
+  var h='<div style="font-size:var(--u4);color:var(--gold);font-weight:bold;margin-bottom:var(--u2)">'+t.em+' '+t.n+' — '+info.label+'</div>';
+  h+='<div style="font-size:var(--u3);color:var(--text2);margin-bottom:var(--u2)">已选 '+selCards.length+'/'+info.n+' 张</div>';
+  h+='<div style="display:flex;gap:var(--u2);flex-wrap:wrap;justify-content:center;margin-bottom:var(--u2)">';
+  G.hd.forEach(function(c,i){
+    var cls='card '+ (SR[c.suit]?'red':'black');
+    if(selCards.indexOf(i)>=0)cls+=' sel';
+    h+='<div class="'+cls+'" data-ci="'+i+'" style="cursor:pointer"><span class="r">'+c.rank+'</span><span class="s">'+c.suit+'</span></div>';
+  });
+  h+='</div>';
+  h+='<div style="display:flex;gap:var(--u2);justify-content:center">';
+  h+='<button class="sb sb-c" id="selConfirm">确认</button>';
+  h+='<button class="sb sb-r" id="selCancel">取消</button>';
+  h+='</div>';
+  ov.innerHTML=h;document.body.appendChild(ov);
+  // 选牌点击
+  function updateSel(){
+    var cardsDiv=ov.querySelectorAll('.card[data-ci]');
+    for(var i=0;i<cardsDiv.length;i++){
+      var ci=parseInt(cardsDiv[i].dataset.ci);
+      if(selCards.indexOf(ci)>=0)cardsDiv[i].classList.add('sel');
+      else cardsDiv[i].classList.remove('sel');
+    }
+    ov.querySelector('div[style*="已选"]').textContent='已选 '+selCards.length+'/'+info.n+' 张';
+  }
+  var cardsDiv=ov.querySelectorAll('.card[data-ci]');
+  for(var i=0;i<cardsDiv.length;i++){
+    cardsDiv[i].addEventListener('click',function(ci){return function(){
+      var idx=selCards.indexOf(ci);
+      if(idx>=0)selCards.splice(idx,1);
+      else if(selCards.length<info.n)selCards.push(ci);
+      updateSel();
+    };}(parseInt(cardsDiv[i].dataset.ci)));
+  }
+  document.getElementById('selConfirm').addEventListener('click',function(){
+    if(selCards.length===0){toast('请至少选1张牌');return;}
+    ov.remove();
+    // 执行效果，用选中的牌索引替代ri()
+    var sel=selCards.slice(0,info.n);
+    if(id==='t_magician'){sel.forEach(function(i){G.hd[i].enh='lucky';});toast(sel.length+'张变幸运牌');}
+    else if(id==='t_empress'){sel.forEach(function(i){G.hd[i].enh='mult';});toast(sel.length+'张变乘数牌');}
+    else if(id==='t_hierophant'){sel.forEach(function(i){G.hd[i].enh='bonus';});toast(sel.length+'张变奖励牌');}
+    else if(id==='t_lovers'){sel.forEach(function(i){G.hd[i].enh='wild';});toast(sel.length+'张变万能牌');}
+    else if(id==='t_chariot'){sel.forEach(function(i){G.hd[i].enh='steel';});toast(sel.length+'张变钢铁牌');}
+    else if(id==='t_justice'){sel.forEach(function(i){G.hd[i].enh='glass';});toast(sel.length+'张变玻璃牌');}
+    else if(id==='t_devil'){sel.forEach(function(i){G.hd[i].enh='gold';});toast(sel.length+'张变黄金牌');}
+    else if(id==='t_tower'){sel.forEach(function(i){G.hd[i].enh='stone';});toast(sel.length+'张变石头牌');}
+    else if(id==='t_star'){sel.forEach(function(i){G.hd[i].suit='♦';});toast('⭐ '+sel.length+'张变♦');}
+    else if(id==='t_moon'){sel.forEach(function(i){G.hd[i].suit='♣';});toast('🌙 '+sel.length+'张变♣');}
+    else if(id==='t_sun'){sel.forEach(function(i){G.hd[i].suit='♥';});toast('☀️ '+sel.length+'张变♥');}
+    else if(id==='t_world'){sel.forEach(function(i){G.hd[i].suit='♠';});toast('🌐 '+sel.length+'张变♠');}
+    else if(id==='t_strength'){sel.forEach(function(i){var cur=V[G.hd[i].rank];var nextRank=null;for(var j=0;j<R.length;j++){if(V[R[j]]===cur+1){nextRank=R[j];break;}}if(nextRank){G.hd[i].rank=nextRank;}else{G.hd[i].rank='A';}});toast(sel.length+'张面值+1');}
+    else if(id==='t_hanged'){G.hd=G.hd.filter(function(c,idx){return sel.indexOf(idx)<0;});G.sel=[];toast('倒吊人:销毁'+sel.length+'张牌');}
+    else if(id==='t_death'){if(sel.length>=2){var right=G.hd[sel[sel.length-1]];G.hd[sel[0]].rank=right.rank;G.hd[sel[0]].suit=right.suit;G.hd[sel[0]].enh=right.enh;toast('死神:复制'+right.rank+right.suit);}else{toast('死神:需选2张牌');}}
+    rr();rrCons();saveGame();
+  });
+  document.getElementById('selCancel').addEventListener('click',function(){ov.remove();});
+}
+
+function at2(t){
+  var id=t.id;
+  if(id==='t_fool'){if(G.lastUsedConsumable){var last=G.lastUsedConsumable;var pp=PP.find(function(p){return p.id===last.id;});var tp=TP.find(function(tt){return tt.id===last.id;});if(pp&&G.cons.length<G.consMax){G.cons.push({type:'planet',em:pp.em,n:pp.n,data:pp,d:pp.d});toast('愚者:创建'+pp.n);}else if(tp&&G.cons.length<G.consMax){G.cons.push({type:'tarot',em:tp.em,n:tp.n,data:tp,d:tp.d});toast('愚者:创建'+tp.n);}else{toast('愚者:消耗槽已满');}}else{toast('愚者:没有上次使用的记录');}}
+  else if(id==='t_magician'){var idx=ri(2);idx.forEach(function(i){G.hd[i].enh='lucky';});toast(idx.length+'张变幸运牌');}
+  else if(id==='t_priestess'){var pp=[...PP];sf(pp);for(var i=0;i<Math.min(2,pp.length);i++){if(G.cons.length<G.consMax){G.cons.push({type:'planet',em:pp[i].em,n:pp[i].n,data:pp[i],d:pp[i].d});toast('女祭司:创建'+pp[i].n);}else{toast('女祭司:消耗槽已满');break;}}}
+  else if(id==='t_empress'){var idx=ri(2);idx.forEach(function(i){G.hd[i].enh='mult';});toast(idx.length+'张变乘数牌');}
+  else if(id==='t_emperor'){var tp=[...TP];sf(tp);for(var i=0;i<Math.min(2,tp.length);i++){if(G.cons.length<G.consMax){G.cons.push({type:'tarot',em:tp[i].em,n:tp[i].n,data:tp[i],d:tp[i].d});toast('皇帝:创建'+tp[i].n);}else{toast('皇帝:消耗槽已满');break;}}}
+  else if(id==='t_hierophant'){var idx=ri(2);idx.forEach(function(i){G.hd[i].enh='bonus';});toast(idx.length+'张变奖励牌');}
+  else if(id==='t_lovers'){var idx=ri(1);idx.forEach(function(i){G.hd[i].enh='wild';});toast(idx.length+'张变万能牌');}
+  else if(id==='t_chariot'){var idx=ri(1);idx.forEach(function(i){G.hd[i].enh='steel';});toast(idx.length+'张变钢铁牌');}
+  else if(id==='t_justice'){var idx=ri(1);idx.forEach(function(i){G.hd[i].enh='glass';});toast(idx.length+'张变玻璃牌');}
+  else if(id==='t_hermit'){var gain=Math.min(20,G.money);G.money+=gain;toast('隐者:金钱翻倍+$'+gain);}
+  else if(id==='t_wheel'){var r=Math.floor(Math.random()*4);if(r===0){var jIdx=Math.floor(Math.random()*G.jk.length);if(G.jk.length>0){var editions=['foil','holographic','polychrome'];G.jk[jIdx].edition=editions[Math.floor(Math.random()*editions.length)];toast('命运之轮:成功!'+G.jk[jIdx].n+'获得版面效果');}else{toast('命运之轮:成功!但没有小丑');}}else{toast('命运之轮:失败(1/4概率)');}}
+  else if(id==='t_strength'){var idx=ri(2);idx.forEach(function(i){if(i<G.hd.length){var cur=V[G.hd[i].rank];var nextRank=null;for(var j=0;j<R.length;j++){if(V[R[j]]===cur+1){nextRank=R[j];break;}}if(nextRank){G.hd[i].rank=nextRank;}else{G.hd[i].rank='A';}}});toast(idx.length+'张面值+1');}
+  else if(id==='t_hanged'){var idx=ri(2);if(idx.length>0){var toRemove=idx.map(function(i){return G.hd[i];});G.hd=G.hd.filter(function(c){return toRemove.indexOf(c)<0;});G.sel=[];}toast('倒吊人:销毁'+idx.length+'张牌');}
+  else if(id==='t_death'){var idx=ri(2);if(idx.length>=2){var right=G.hd[idx[idx.length-1]];G.hd[idx[0]].rank=right.rank;G.hd[idx[0]].suit=right.suit;G.hd[idx[0]].enh=right.enh;toast('死神:复制'+right.rank+right.suit);}else{toast('死神:手牌不够2张');}}
+  else if(id==='t_temperance'){var val=G.jk.reduce(function(s,j){return s+3;},0);val=Math.min(50,val);G.money+=val;toast('节制:+$'+val);}
+  else if(id==='t_devil'){var idx=ri(1);idx.forEach(function(i){G.hd[i].enh='gold';});toast(idx.length+'张变黄金牌');}
+  else if(id==='t_tower'){var idx=ri(1);idx.forEach(function(i){G.hd[i].enh='stone';});toast(idx.length+'张变石头牌');}
+  else if(id==='t_star'){var idx=ri(3);idx.forEach(function(i){G.hd[i].suit='♦';});toast('⭐ '+idx.length+'张变♦');rr();}
+  else if(id==='t_moon'){var idx=ri(3);idx.forEach(function(i){G.hd[i].suit='♣';});toast('🌙 '+idx.length+'张变♣');rr();}
+  else if(id==='t_sun'){var idx=ri(3);idx.forEach(function(i){G.hd[i].suit='♥';});toast('☀️ '+idx.length+'张变♥');rr();}
+  else if(id==='t_judgement'){var p=JP.filter(function(j){return !G.jk.find(function(jj){return jj.id===j.id})&&j.r!=='l';});if(p.length>0){sf(p);G.jk.push(p[0]);toast('审判:获得'+p[0].n);}else{toast('审判:没有可用小丑');}}
+  else if(id==='t_world'){var idx=ri(3);idx.forEach(function(i){G.hd[i].suit='♠';});toast('🌐 '+idx.length+'张变♠');rr();}
+}
+function ri(n){var a=[];for(var i=0;i<G.hd.length;i++)a.push(i);sf(a);return a.slice(0,Math.min(n,a.length));}
+function rsh2(){if(G.rr<=0||G.money<G.rc)return;G.money-=G.rc;G.rr--;gs();rsh();}
+function csh(){var ov=document.getElementById('shov');if(ov)ov.remove();
+  // 衰减
+  G.jk.forEach(function(j){
+    if(j.ef&&j.ef.t==='effect'){
+      if(j.ef.sub==='decayMult'){j.dyn=(j.dyn||20)-4;if(j.dyn<=0)j.dyn=0;}
+      else if(j.ef.sub==='decayXMult'){j.dynX=(j.dynX||2)-0.01;if(j.dynX<=0.5)j.dynX=0.5;}
+      else if(j.ef.sub==='madness'){j.dynX=(j.dynX||1)*1.5;var others=G.jk.filter(function(jj){return jj.id!==j.id;});if(others.length>0){var ridx=Math.floor(Math.random()*others.length);G.jk.splice(G.jk.indexOf(others[ridx]),1);toast('狂乱销毁了 '+others[ridx].n);}}
+    }
+  });
+  G.jk=G.jk.filter(function(j){return !(j.ef&&j.ef.t==='effect'&&j.ef.sub==='decayMult'&&j.dyn<=0);});
+  showBlindSelect();
+}
+
+function showBlindSelect(){
+  G.r++;if(G.r>3){G.r=1;G.a++;if(G.a>5){shr(true);clearSave();return;}}
+  var ov=document.createElement('div');ov.className='ov';ov.id='bsov';
+  var bossData=G.r===3?getBossForAnte(G.a):null;
+  var h='<div style="font-size:var(--u5);color:var(--gold);font-weight:bold;font-family:monospace;margin-bottom:var(--u4);text-shadow:0 0 10px rgba(241,196,15,0.3)">ANTE '+G.a+'</div>';
+  h+='<div style="display:flex;flex-direction:column;gap:var(--u3);align-items:center;max-width:400px">';
+  var t1=Math.round(at(G.a,1));
+  h+='<div class="blind-card" data-r="1" style="padding:var(--u4);background:linear-gradient(135deg,rgba(125,60,152,0.1),rgba(220,200,220,0.6));border:2px solid rgba(125,60,152,0.2);border-radius:10px;width:100%;cursor:pointer">';
+  h+='<div style="font-size:var(--u4);color:var(--purple);font-weight:bold">🟣 小盲注</div>';
+  h+='<div style="font-size:var(--u3);color:var(--text2);margin-top:var(--u2)">目标: <span style="color:var(--gold);font-weight:bold">'+t1+'</span> 分 · 基础分数</div>';
+  h+='</div>';
+  var t2=Math.round(at(G.a,2));
+  h+='<div class="blind-card" data-r="2" style="padding:var(--u4);background:linear-gradient(135deg,rgba(176,48,32,0.08),rgba(220,200,220,0.6));border:2px solid rgba(176,48,32,0.2);border-radius:10px;width:100%;cursor:pointer">';
+  h+='<div style="font-size:var(--u4);color:#c0392b;font-weight:bold">🔴 大盲注</div>';
+  h+='<div style="font-size:var(--u3);color:var(--text2);margin-top:var(--u2)">目标: <span style="color:var(--gold);font-weight:bold">'+t2+'</span> 分 · ×1.5</div>';
+  h+='</div>';
+  var t3=Math.round(at(G.a,3));
+  var bossEm=bossData?bossData.em:'💀';var bossN=bossData?bossData.n:'Boss';var bossD=bossData?bossData.d:'分数×2';
+  h+='<div class="blind-card" data-r="3" style="padding:var(--u4);background:linear-gradient(135deg,rgba(44,62,80,0.15),rgba(220,200,220,0.6));border:2px solid rgba(44,62,80,0.3);border-radius:10px;width:100%;cursor:pointer">';
+  h+='<div style="font-size:var(--u4);color:#2c3e50;font-weight:bold">'+bossEm+' '+bossN+'</div>';
+  h+='<div style="font-size:var(--u3);color:var(--text2);margin-top:var(--u2)">目标: <span style="color:var(--gold);font-weight:bold">'+t3+'</span> 分</div>';
+  h+='<div style="font-size:var(--u3);color:#e74c3c;margin-top:var(--u2);font-weight:bold">'+bossD+'</div>';
+  h+='</div>';
+  if(G.r<3){
+    h+='<div class="blind-card" id="bsSkip" style="padding:var(--u3);background:rgba(230,210,230,0.3);border:2px dashed rgba(125,60,152,0.1);border-radius:10px;width:100%;cursor:pointer">';
+    h+='<div style="font-size:var(--u3);color:var(--purple);font-weight:bold">⏭ 跳过</div>';
+    h+='<div style="font-size:var(--u2);color:var(--text2)">奖励: +$'+(G.r===1?3:4)+' +随机标签</div>';
+    h+='</div>';
+  }
+  h+='</div>';
+  ov.innerHTML=h;document.body.appendChild(ov);
+  var cards=ov.querySelectorAll('.blind-card[data-r]');
+  for(var i=0;i<cards.length;i++){
+    cards[i].style.animation='blindReveal 0.5s ease-out '+i*0.1+'s both';
+    cards[i].addEventListener('mouseenter',function(){this.style.transform='scale(1.03)';this.style.boxShadow='0 4px 15px rgba(241,196,15,0.15)';});
+    cards[i].addEventListener('mouseleave',function(){this.style.transform='';this.style.boxShadow='';});
+    cards[i].addEventListener('click',function(bR){return function(){ov.remove();startBlind(bR);};}(parseInt(cards[i].dataset.r)));
+  }
+  if(G.r<3)document.getElementById('bsSkip').addEventListener('click',function(){ov.remove();skipBlind();});
+}
+
+function startBlind(round){
+  SND.blind();
+  G.r=round;G.tgt=at(G.a,G.r);G.sc=0;G.roundBonusChips=0;
+  G.hl=4+G.jk.filter(function(j){return j.ef&&j.ef.t==='effect'&&j.ef.sub==='burglar';}).length*3;
+  G.dl=3+G.jk.filter(function(j){return j.ef&&j.ef.t==='effect'&&j.ef.sub==='addDiscard';}).length;
+  // 标签加成
+  if(G.tags.indexOf('tg_hand')>=0)G.hl+=1;
+  if(G.tags.indexOf('tg_discard')>=0)G.dl+=1;
+  if(G.tags.indexOf('tg_add')>=0)G.roundBonusChips+=25;
+  G.ph='play';bd();sf(G.dk);
+  // 随机分配封印（约5%概率）
+  G.dk.forEach(function(c){if(Math.random()<0.05){var seals=['red','purple','gold','blue'];c.seal=seals[Math.floor(Math.random()*4)];}});
+  G.hd=[];G.sel=[];d8();rr();saveGame();
+  G.bossFn=null;G.bossPlayedTypes=[];
+  if(G.r===3){var boss=getBossForAnte(G.a);if(boss){toast(boss.em+' '+boss.n+': '+boss.d);G.bossFn=boss.fn;}}
+  // 远古小丑每轮随机花色
+  G.jk.forEach(function(j){if(j.ef&&j.ef.t==='effect'&&j.ef.sub==='ancientJoker'){j.dyn=S[Math.floor(Math.random()*4)];toast('远古：本轮花色 '+j.dyn);}});
+  // 清除一次性标签
+  G.tags=G.tags.filter(function(t){return t!=='tg_hand'&&t!=='tg_discard'&&t!=='tg_add'&&t!=='tg_economy'&&t!=='tg_double'&&t!=='tg_skip'&&t!=='tg_top'&&t!=='tg_investment';});
+}
+
+function skipBlind(){
+  SND.blind();
+  var reward=G.r===1?3:4;G.money+=reward;G.stats.moneyEarned+=reward;
+  // 随机标签奖励
+  sf(TG);var tag=TG[Math.floor(Math.random()*TG.length)];
+  G.tags.push(tag.id);
+  var tagMsg='';
+  if(tag.id==='tg_add'){G.roundBonusChips+=25;tagMsg='+25筹码';}
+  else if(tag.id==='tg_hand'){G.hl+=1;tagMsg='+1手牌';}
+  else if(tag.id==='tg_discard'){G.dl+=1;tagMsg='+1弃牌';}
+  else if(tag.id==='tg_economy'){tagMsg='商店价格-$2';}
+  else if(tag.id==='tg_investment'){tagMsg='利息上限+25';}
+  else{tagMsg=tag.d;}
+  toast('跳过盲注 +$'+reward+' · '+tag.em+' '+tag.n+'('+tagMsg+')');
+  showBlindSelect();
+}
+
+function getBossForAnte(ante){
+  var BB=[
+    {id:'b1',n:'钩子',em:'🪝',d:'销毁手中随机2张牌',ante:1,fn:'hook'},
+    {id:'b2',n:'镣铐',em:'⛓',d:'手牌上限减1',ante:2,fn:'manacle'},
+    {id:'b3',n:'眼睛',em:'👁',d:'不能重复打出同一牌型',ante:3,fn:'eye'},
+    {id:'b4',n:'枯萎',em:'枯',d:'人头牌乘数归零',ante:4,fn:'plant'},
+    {id:'b5',n:'蛇',em:'🐍',d:'出牌后补牌至3张',ante:5,fn:'serpent'},
+  ];
+  return BB.find(function(b){return b.ante===ante;})||null;
+}
+function shr(win){
+  if(win)SND.win();else SND.lose();
+  var ov=document.createElement('div');ov.className='ov '+ (win?'res-w':'res-l');
+  var t=win?'🎉 通关!':'💀 失败',s=win?'成功通过所有Ante!':'Ante '+G.a+' 第'+G.r+'轮未达标';
+  var jl=G.jk.length>0?G.jk.map(function(j,i){return '#'+(i+1)+' '+j.em+j.n}).join(' → '):'无';
+  var lvls='';for(var k in G.hLv)if(G.hLv[k]>0)lvls+=HZ[k]+' Lv.'+(G.hLv[k]+1)+' · ';if(!lvls)lvls='无升级';
+  var vc=G.vouchers.length>0?G.vouchers.map(function(v){var vv=VC.find(function(x){return x.id===v;});return vv?vv.em+vv.n:v;}).join(' · '):'无';
+  // 运行统计
+  var stats='出牌:'+G.stats.handsPlayed+'次 · 弃牌:'+G.stats.discardsUsed+'次 · 最高分:'+G.stats.highestScore+' · 赚钱:$'+G.stats.moneyEarned+' · 买小丑:'+G.stats.jokersBought+' · 卖小丑:'+G.stats.jokersSold+' · 星球:'+G.stats.planetsUsed+' · 塔罗:'+G.stats.tarotsUsed+' · 幽灵:'+G.stats.spectralUsed+' · 开包:'+G.stats.packsOpened;
+  ov.innerHTML='<div class="res-t">'+t+'</div><div class="res-s">'+s+'</div><div class="res-s">分数: '+G.sc+'</div><div class="res-s">小丑链: '+jl+'</div><div class="res-s">等级: '+lvls+'</div><div class="res-s">凭证: '+vc+'</div><div class="res-s" style="font-size:var(--u3);color:var(--text2)">📊 '+stats+'</div><button class="st-b" id="brt" style="margin-top:10px">再来一次</button>';
+  document.body.appendChild(ov);
+  document.getElementById('brt').addEventListener('click',rg);
+}
+function rg(){var ovs=document.querySelectorAll('.ov');for(var i=0;i<ovs.length;i++)ovs[i].remove();document.getElementById('start').style.display='flex';if(hasSave())document.getElementById('loadBtn').style.display='inline-block';else document.getElementById('loadBtn').style.display='none';}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');t.style.animation='toastIn 0.25s ease-out';setTimeout(function(){t.classList.remove('on');t.style.animation='';},1800);}
+function sg(){document.getElementById('start').style.display='none';init();rr();showTutorial();}
+
+function showTutorial(){
+  var tutDone=localStorage.getItem('balatro_tut');
+  if(tutDone)return;
+  var ov=document.createElement('div');ov.className='ov';ov.id='tutOv';
+  var h='<div style="font-size:var(--u5);color:var(--gold);font-weight:bold;font-family:monospace;margin-bottom:var(--u4);text-shadow:0 0 10px rgba(241,196,15,0.3)">🎮 操作指南</div>';
+  h+='<div style="max-width:360px;font-size:var(--u3);color:var(--text2);line-height:1.6">';
+  h+='<div style="margin-bottom:var(--u3)"><span style="color:var(--gold)">🃏 出牌</span> — 点击手牌选中(最多5张)，点击「出牌」打出</div>';
+  h+='<div style="margin-bottom:var(--u3)"><span style="color:var(--gold)">🗑 弃牌</span> — 选中牌后点击「弃牌」，换新牌进来</div>';
+  h+='<div style="margin-bottom:var(--u3)"><span style="color:var(--gold)">🛒 商店</span> — 通过盲注后进入商店，购买小丑/星球/塔罗/强化包</div>';
+  h+='<div style="margin-bottom:var(--u3)"><span style="color:var(--gold)">👁 小丑详情</span> — 点击小丑查看详情和卖出选项</div>';
+  h+='<div style="margin-bottom:var(--u3)"><span style="color:var(--gold)">🔮 消耗品</span> — 星球牌直接升级牌型，塔罗牌点击消耗槽使用(可自选目标牌)</div>';
+  h+='<div style="margin-bottom:var(--u3)"><span style="color:var(--gold)">🪝 Boss盲注</span> — 每Ante有Boss特殊效果，小心应对</div>';
+  h+='<div style="margin-bottom:var(--u3)"><span style="color:var(--gold)">⏭ 跳过盲注</span> — 可跳过小/大盲注换取金币+标签奖励</div>';
+  h+='<div style="margin-bottom:var(--u3)"><span style="color:var(--gold)">🎯 目标</span> — 每轮打出牌达到目标分数即可通过，进入下一Ante</div>';
+  h+='</div>';
+  h+='<button class="sb sb-c" id="tutOk" style="margin-top:var(--u4)">开始游戏</button>';
+  ov.innerHTML=h;document.body.appendChild(ov);
+  document.getElementById('tutOk').addEventListener('click',function(){ov.remove();localStorage.setItem('balatro_tut','1');});
+}
+function sl(){document.getElementById('start').style.display='none';if(loadGame()){rr();}else{init();rr();}}
+function toggleLandscape(){var b=document.body,btn=document.getElementById('landscape-toggle');
+  if(b.classList.contains('force-landscape')){b.classList.remove('force-landscape');btn.textContent='🔄 横屏';}
+  else{b.classList.add('force-landscape');btn.textContent='↩️ 恢复';}rr();
+}
+
+document.getElementById('goBtn').addEventListener('click',sg);
+document.getElementById('loadBtn').addEventListener('click',sl);
+if(hasSave())document.getElementById('loadBtn').style.display='inline-block';
+document.getElementById('bp').addEventListener('click',ph);
+document.getElementById('bd').addEventListener('click',dc);
+document.getElementById('sortSuit').addEventListener('click',sortBySuit);
+document.getElementById('sortRank').addEventListener('click',sortByRank);
+document.getElementById('landscape-toggle').addEventListener('click',toggleLandscape);
+
+// ===== 控制台系统 =====
+var cheatMode=false;
+var cheatInput='';
+var CHEAT_PASSWORD='mawenxuan';
+document.addEventListener('keydown',function(ev){
+  // 只处理字母键
+  if(ev.key.length===1&&/[a-zA-Z]/.test(ev.key)){
+    cheatInput+=ev.key.toLowerCase();
+    // 保留最近密码长度的字符
+    if(cheatInput.length>CHEAT_PASSWORD.length){
+      cheatInput=cheatInput.slice(-CHEAT_PASSWORD.length);
+    }
+    // 检查密码匹配
+    if(cheatInput===CHEAT_PASSWORD){
+      cheatMode=!cheatMode;
+      cheatInput='';
+      if(cheatMode){
+        G.money+=999;G.stats.moneyEarned+=999;toast('⚡ +$999');
+        rr();rrCons();
+      }else{
+        toast('⚡ 已关闭');
+      }
+    }
+  }else if(ev.key==='Escape'&&cheatMode){
+    cheatMode=false;toast('⚡ 已关闭');
+  }
+});
+// 测试模式：每次购买前补充金币
+var origBi=bi;
+bi=function(idx){
+  if(cheatMode&&G.money<G.shop[idx].price){
+    G.money+=999;G.stats.moneyEarned+=999;toast('⚡ +$999');
+  }
+  origBi(idx);
+};
+// 测试模式：每次出牌前补充出牌数
+var origPh=ph;
+ph=function(){
+  if(cheatMode&&G.hl<=0){G.hl+=5;toast('⚡ +5手牌');}
+  origPh();
+};
+</script>
+</body>
+</html>
